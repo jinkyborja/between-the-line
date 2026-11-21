@@ -6,6 +6,7 @@ export const mainNav: NavItem[] = [
 	{ href: '/discover', label: 'Discover', icon: 'discover' },
 	{ href: '/library', label: 'Poetry Library', icon: 'library' },
 	{ href: '/journal', label: 'My Journal', icon: 'journal', private: true },
+	{ href: '/letters', label: 'Letters to Myself', icon: 'envelope', private: true },
 	{ href: '/community', label: 'Community', icon: 'community' },
 	{ href: '/bookmarks', label: 'Bookmarks', icon: 'bookmark' }
 ];

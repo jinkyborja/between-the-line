@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 	// RLS: recipient only. Rows never contain who acted.
 	const { data } = await locals.supabase
 		.from('notifications')
-		.select('id, type, post_id, comment_id, read_at, created_at')
+		.select('id, type, post_id, comment_id, letter_id, read_at, created_at')
 		.order('created_at', { ascending: false })
 		.limit(100)
 		.returns<Notification[]>();

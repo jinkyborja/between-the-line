@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { kindOf, salutationFor } from '#lib/letters.ts';
 import type { RequestHandler } from './$types';
 
 type Row = {
@@ -29,6 +30,21 @@ export const GET: RequestHandler = async ({ locals }) => {
 		if (r.moods.length) lines.push(`Feeling: ${r.moods.join(', ')}`);
 		if (r.tags.length) lines.push(`Tags: ${r.tags.map((t) => '#' + t).join(' ')}`);
 		lines.push('', r.body, '');
+	}
+
+	// Letters to Myself (also owner-only by RLS).
+	const { data: letters } = await locals.supabase
+		.from('letters')
+		.select('kind, recipient, title, body, status, archived_at, remind_on, created_at')
+		.order('created_at');
+	if (letters?.length) {
+		lines.push('', '# Letters to Myself', '');
+		for (const l of letters) {
+			lines.push('---', '', `## ${l.title || 'Untitled letter'} — ${kindOf(l.kind).label}${l.status === 'draft' ? ' (draft)' : ''}${l.archived_at ? ' (archived)' : ''}`, '');
+			lines.push(`*${new Date(l.created_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })}*`);
+			if (l.remind_on) lines.push(`To be opened: ${l.remind_on}`);
+			lines.push('', salutationFor(l.kind, l.recipient), '', l.body, '', '— me', '');
+		}
 	}
 
 	return new Response(lines.join('\n'), {

@@ -161,7 +161,7 @@
 	{#if m && 'message' in m}<p role="alert" class="notice-err">{m.message}</p>{/if}
 {/snippet}
 
-<dialog bind:this={deleteEl} aria-labelledby="dat" oncancel={(e) => { e.preventDefault(); deleteOpen = false; }}>
+<dialog class="modal" bind:this={deleteEl} aria-labelledby="dat" oncancel={(e) => { e.preventDefault(); deleteOpen = false; }}>
 	<form method="POST" action="?/delete" class="flex flex-col gap-4 p-7 sm:p-9" use:enhance={() => { busy = 'delete'; return async ({ update }) => { await update(); busy = ''; deleteOpen = false; }; }}>
 		<h3 id="dat" class="m-0 font-serif text-[26px] font-normal text-ink">Are you sure?</h3>
 		<p class="m-0 text-[15px] leading-relaxed text-muted">
@@ -272,8 +272,5 @@
 		border-radius: 6px;
 		background: var(--color-sheet);
 		box-shadow: 0 40px 80px -40px rgb(43 37 34 / 0.55);
-	}
-	dialog::backdrop {
-		background: rgb(43 37 34 / 0.38);
 	}
 </style>

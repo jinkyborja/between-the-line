@@ -34,6 +34,7 @@
 </script>
 
 <dialog
+	class="modal"
 	bind:this={el}
 	aria-labelledby="dlg-title"
 	oncancel={(e) => {
@@ -55,6 +56,7 @@
 </dialog>
 
 <style>
+	/* Entrance/exit motion comes from the shared dialog.modal styles in app.css. */
 	dialog {
 		width: calc(100% - 32px);
 		max-width: 440px;
@@ -63,25 +65,5 @@
 		border-radius: 6px;
 		background: var(--color-sheet);
 		box-shadow: 0 40px 80px -40px rgb(43 37 34 / 0.55);
-		opacity: 0;
-		transform: translateY(12px) scale(0.985);
-		transition:
-			opacity var(--t2) var(--ease-out),
-			transform var(--t3) var(--ease-out),
-			overlay var(--t2) allow-discrete,
-			display var(--t2) allow-discrete;
-	}
-	dialog[open] {
-		opacity: 1;
-		transform: none;
-	}
-	@starting-style {
-		dialog[open] {
-			opacity: 0;
-			transform: translateY(12px) scale(0.985);
-		}
-	}
-	dialog::backdrop {
-		background: rgb(43 37 34 / 0.38);
 	}
 </style>

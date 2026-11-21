@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import Toast from '#lib/components/Toast.svelte';
 	import { GUIDELINES, REPORT_REASONS, friendlyError } from '#lib/community.ts';
 	import { createToast } from '#lib/toast.svelte.ts';
@@ -10,6 +11,10 @@
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+	// Skeletons while switching sort/category on this page (not for "Show more").
+	const filtering = $derived(
+		navigating.to?.url.pathname === '/community' && navigating.to.url.searchParams.get('more') === null
+	);
 	const toast = createToast();
 
 	$effect(() => {
@@ -110,6 +115,17 @@
 
 		{#if data.error}
 			<p role="alert" class="notice-err">{data.error}</p>
+		{:else if filtering}
+			<div aria-busy="true" aria-label="Loading reflections" class="flex flex-col gap-7">
+				{#each [1, 2, 3] as k (k)}
+					<div class="flex flex-col gap-4 border border-line bg-sheet p-8">
+						<div class="flex items-center gap-3"><div class="skel size-10 rounded-full!"></div><div class="skel h-3 w-32"></div></div>
+						<div class="skel h-4 w-[94%]"></div>
+						<div class="skel h-4 w-[86%]"></div>
+						<div class="skel h-4 w-[60%]"></div>
+					</div>
+				{/each}
+			</div>
 		{:else if data.posts.length}
 			{#each data.posts as p, i (p.id)}
 				<Post post={p} supabase={data.supabase} delay={Math.min(i, 6) * 60} onreport={openReport} ondelete={(id) => (deleteId = id)} onerror={(m) => toast.show(m)} />
@@ -118,11 +134,12 @@
 				<button class="btn btn-ghost self-center" onclick={() => setParam({ more: String(data.filters.more + 1) })}>Show more</button>
 			{/if}
 		{:else}
-			<div class="rise flex flex-col items-center gap-3 border border-line bg-card px-8 py-16 text-center">
-				<h3 class="m-0 font-serif text-2xl font-normal text-ink">{data.filters.sort === 'mine' ? 'You haven’t shared anything yet.' : 'It’s quiet here.'}</h3>
-				<p class="m-0 max-w-[340px] text-sm leading-relaxed text-muted">When you’re ready, you can share a reflection — without your name, ever.</p>
-				<a class="btn btn-ghost mt-1" href="/community/new">Share anonymously</a>
-			</div>
+			<EmptyState
+				title={data.filters.sort === 'mine' ? 'You haven’t shared anything yet.' : 'It’s quiet here.'}
+				text="When you’re ready, you can share a reflection — without your name, ever."
+			>
+				<a class="btn btn-ghost" href="/community/new">Share anonymously</a>
+			</EmptyState>
 		{/if}
 	</div>
 
@@ -147,7 +164,7 @@
 </div>
 
 <!-- Report modal -->
-<dialog bind:this={reportEl} aria-labelledby="rt" oncancel={(e) => { e.preventDefault(); reportTarget = null; }} onclick={(e) => e.target === reportEl && (reportTarget = null)}>
+<dialog class="modal" bind:this={reportEl} aria-labelledby="rt" oncancel={(e) => { e.preventDefault(); reportTarget = null; }} onclick={(e) => e.target === reportEl && (reportTarget = null)}>
 	{#if reportSent}
 		<div class="flex flex-col gap-4 p-7 sm:p-9">
 			<h3 id="rt" class="m-0 font-serif text-[26px] font-normal text-ink">Thank you for looking out.</h3>
@@ -220,8 +237,5 @@
 		border-radius: 6px;
 		background: var(--color-sheet);
 		box-shadow: 0 40px 80px -40px rgb(43 37 34 / 0.55);
-	}
-	dialog::backdrop {
-		background: rgb(43 37 34 / 0.38);
 	}
 </style>

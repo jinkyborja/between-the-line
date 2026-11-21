@@ -89,7 +89,7 @@
 	<article class="mx-auto flex max-w-[680px] flex-col gap-12 px-6 pt-16 pb-20 sm:px-7 sm:pt-[104px]">
 		<header class="reveal-title flex flex-col items-start gap-5">
 			<a href="/library?category={poem.category.slug}" class="eyebrow text-rose">{poem.category.name}{isQuote ? ' · Quote' : ''}</a>
-			<h1 class="m-0 font-serif text-[42px] leading-[1.05] font-light tracking-[-0.025em] text-balance text-ink sm:text-[56px]">{poem.title}</h1>
+			<h1 style="view-transition-name: poem-title" class="m-0 font-serif text-[42px] leading-[1.05] font-light tracking-[-0.025em] text-balance text-ink sm:text-[56px]">{poem.title}</h1>
 			<p class="m-0 text-[15px] text-muted">{poem.author} <span class="text-faint">·</span> {poem.reading_minutes} min read</p>
 		</header>
 

@@ -389,3 +389,118 @@
 		background: #5c4c42;
 	}
 }
+
+/* ===========================================================================
+ * Motion refinements
+ * Durations: t1 160ms (press) · t2 240ms (state) · t3 420ms (hover/settle)
+ *            t4 720ms (arrival). Easing: ease-out for arrivals, ease-io for
+ *            ambient loops. No springs, no overshoot.
+ * =========================================================================== */
+
+/* 1 · Page transitions — content fades and rises 6px; chrome stays put. */
+::view-transition-old(root) {
+	animation: vtOut 200ms var(--ease-out) both;
+}
+::view-transition-new(root) {
+	animation: vtIn 360ms var(--ease-out) 60ms both;
+}
+@keyframes vtOut {
+	to {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+}
+@keyframes vtIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+.vt-sidebar {
+	view-transition-name: sidebar;
+}
+.vt-bottomnav {
+	view-transition-name: bottomnav;
+}
+::view-transition-group(sidebar),
+::view-transition-group(bottomnav) {
+	animation: none;
+}
+
+/* 5 · Reading ↔ writing — the poem title glides between the two pages. */
+::view-transition-group(poem-title) {
+	animation-duration: 520ms;
+	animation-timing-function: var(--ease-out);
+}
+::view-transition-old(poem-title),
+::view-transition-new(poem-title) {
+	height: 100%;
+	object-fit: contain;
+	object-position: left top;
+}
+
+/* 7 · Modals — every <dialog class="modal"> settles in the same way. */
+dialog.modal {
+	opacity: 0;
+	transform: translateY(12px) scale(0.985);
+	transition:
+		opacity var(--t2) var(--ease-out),
+		transform var(--t3) var(--ease-out),
+		overlay var(--t2) allow-discrete,
+		display var(--t2) allow-discrete;
+}
+dialog.modal[open] {
+	opacity: 1;
+	transform: none;
+}
+@starting-style {
+	dialog.modal[open] {
+		opacity: 0;
+		transform: translateY(12px) scale(0.985);
+	}
+}
+dialog.modal::backdrop {
+	background: rgb(43 37 34 / 0);
+	transition:
+		background-color var(--t3) var(--ease-out),
+		overlay var(--t3) allow-discrete,
+		display var(--t3) allow-discrete;
+}
+dialog.modal[open]::backdrop {
+	background: rgb(43 37 34 / 0.38);
+}
+@starting-style {
+	dialog.modal[open]::backdrop {
+		background: rgb(43 37 34 / 0);
+	}
+}
+
+/* 10 · Empty states — the ink line draws itself once. */
+.ink-draw path {
+	stroke-dasharray: 160;
+	animation: inkDraw 1.6s var(--ease-out) 120ms both;
+}
+@keyframes inkDraw {
+	from {
+		stroke-dashoffset: 160;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+	dialog.modal,
+	dialog.modal::backdrop {
+		transition: none;
+	}
+	.ink-draw path {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+}

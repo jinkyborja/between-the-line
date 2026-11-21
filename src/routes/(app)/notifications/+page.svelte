@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { ago } from '#lib/time.ts';
 	import type { IconName } from '#lib/icons.ts';
@@ -13,7 +14,8 @@
 		appreciation: { icon: 'heart', text: 'Someone felt your anonymous post.' },
 		post_hidden: { icon: 'shield', text: 'A moderator removed one of your posts because it didn’t fit our guidelines.' },
 		comment_hidden: { icon: 'shield', text: 'A moderator removed one of your replies because it didn’t fit our guidelines.' },
-		report_resolved: { icon: 'flag', text: 'Thank you — a report you sent has been reviewed.' }
+		report_resolved: { icon: 'flag', text: 'Thank you — a report you sent has been reviewed.' },
+		letter_reminder: { icon: 'envelope', text: 'A letter you wrote to your future self is ready to be opened.' }
 	};
 
 	async function clearAll() {
@@ -41,16 +43,13 @@
 					<span class="inline-flex size-9 flex-none items-center justify-center rounded-full bg-rose-tint text-rose"><Icon name={c.icon} size={17} /></span>
 					<span class="flex flex-1 flex-col gap-1">
 						<span class="text-[15px] leading-normal text-ink-2">{c.text}</span>
-						<span class="text-xs text-subtle">{ago(n.created_at)}{#if n.post_id && (n.type === 'comment' || n.type === 'appreciation')} · <a href="/community?sort=mine">See your posts</a>{/if}</span>
+						<span class="text-xs text-subtle">{ago(n.created_at)}{#if n.post_id && (n.type === 'comment' || n.type === 'appreciation')} · <a href="/community?sort=mine">See your posts</a>{/if}{#if n.letter_id} · <a href="/letters/write?id={n.letter_id}">Open your letter</a>{/if}</span>
 					</span>
 				</li>
 			{/each}
 		</ul>
 	{:else}
-		<div class="flex flex-col items-center gap-3 border border-line bg-card px-8 py-16 text-center">
-			<h3 class="m-0 font-serif text-2xl font-normal text-ink">Nothing new.</h3>
-			<p class="m-0 text-sm text-muted">When someone feels or replies to something you shared, you’ll see it here.</p>
-		</div>
+		<EmptyState title="Nothing new." text="When someone feels or replies to something you shared, you’ll see it here." />
 	{/if}
 </div>
 

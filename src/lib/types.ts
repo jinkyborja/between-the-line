@@ -90,11 +90,29 @@ export interface CommunityComment {
 
 export interface Notification {
 	id: string;
-	type: 'comment' | 'appreciation' | 'post_hidden' | 'comment_hidden' | 'report_resolved';
+	type: 'comment' | 'appreciation' | 'post_hidden' | 'comment_hidden' | 'report_resolved' | 'letter_reminder';
 	post_id: string | null;
 	comment_id: string | null;
+	letter_id?: string | null;
 	read_at: string | null;
 	created_at: string;
 }
 
 export type ReportReason = 'harassment' | 'hate' | 'self_harm' | 'identifying_info' | 'spam' | 'other';
+
+export type LetterKind = 'past' | 'present' | 'future' | 'unsent';
+
+/** A private letter. Owner-only in the database; never shared or listed publicly. */
+export interface Letter {
+	id: string;
+	kind: LetterKind;
+	recipient: string | null;
+	title: string | null;
+	body: string;
+	status: 'draft' | 'complete';
+	archived_at: string | null;
+	remind_on: string | null;
+	reminded_at: string | null;
+	created_at: string;
+	updated_at: string;
+}

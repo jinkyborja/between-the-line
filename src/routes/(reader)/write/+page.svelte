@@ -177,7 +177,7 @@
 			{#if poem}
 				<div class="settle flex flex-col gap-3.5 border border-line bg-sheet p-7">
 					<span class="eyebrow text-rose">Reflecting on</span>
-					<a href="/read/{poem.slug}" class="font-serif text-2xl text-ink">{poem.title}</a>
+					<a href="/read/{poem.slug}" class="font-serif text-2xl text-ink" style="view-transition-name: poem-title">{poem.title}</a>
 					<p class="m-0 font-serif text-base leading-[1.7] whitespace-pre-line text-ink-3">{poem.kind === 'quote' ? `“${poem.body}”` : excerptLines}</p>
 					<span class="text-[13px] text-muted">— {poem.author}</span>
 				</div>

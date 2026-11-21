@@ -20,7 +20,7 @@
 <!-- Mobile bottom nav — matches "Component · Bottom nav". The rose indicator slides between tabs. -->
 <nav
 	aria-label="App"
-	class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t border-line bg-[rgb(251_248_243/0.96)] px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur lg:hidden"
+	class="vt-bottomnav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t border-line bg-[rgb(251_248_243/0.96)] px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur lg:hidden"
 >
 	<span
 		aria-hidden="true"
@@ -33,11 +33,12 @@
 			<a
 				href={tab.href}
 				aria-current={on ? 'page' : undefined}
-				class="flex min-h-[52px] flex-col items-center justify-center gap-1 text-[11px] tracking-[0.01em] transition-colors duration-[240ms] {on
+				class="tab flex min-h-[52px] flex-col items-center justify-center gap-1 text-[11px] tracking-[0.01em] transition-colors duration-[240ms] {on
 					? 'font-semibold text-rose'
 					: 'font-medium text-muted'}"
+				class:on
 			>
-				<Icon name={tab.icon} size={22} />
+				<span class="ico"><Icon name={tab.icon} size={22} filled={false} /></span>
 				{tab.label}
 			</a>
 		{:else}
@@ -57,6 +58,28 @@
 		transition:
 			left var(--t3) var(--ease-out),
 			opacity var(--t2);
+	}
+	/* Active icon lifts 2px; a press gently settles. No bounce. */
+	.ico {
+		display: inline-flex;
+		transition: transform var(--t3) var(--ease-out);
+	}
+	.tab.on .ico {
+		transform: translateY(-2px);
+	}
+	.tab {
+		-webkit-tap-highlight-color: transparent;
+		transition:
+			color var(--t2) var(--ease-out),
+			opacity var(--t1) var(--ease-out);
+	}
+	.tab:active {
+		opacity: 0.7;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tab.on .ico {
+			transform: none;
+		}
 	}
 	.write {
 		justify-self: center;

@@ -9,7 +9,7 @@
 </script>
 
 <div class="flex min-h-screen">
-	<aside class="hidden w-[260px] flex-none lg:block">
+	<aside class="vt-sidebar hidden w-[260px] flex-none lg:block">
 		<Sidebar displayName={data.displayName} isAdmin={data.isAdmin} unread={data.unreadNotifications} />
 	</aside>
 
@@ -20,6 +20,7 @@
 		>
 			<Wordmark href="/discover" size={20} />
 			<span class="flex items-center gap-1">
+				<a href="/letters" class="inline-flex size-11 items-center justify-center text-body" aria-label="Letters to Myself"><Icon name="envelope" /></a>
 				<a href="/notifications" class="relative inline-flex size-11 items-center justify-center text-body" aria-label="Notifications{data.unreadNotifications ? `, ${data.unreadNotifications} unread` : ''}">
 					<Icon name="bell" />
 					{#if data.unreadNotifications}<span class="absolute top-2.5 right-2.5 size-2 rounded-full bg-rose" aria-hidden="true"></span>{/if}

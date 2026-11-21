@@ -13,6 +13,9 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 		.eq('id', locals.user.id)
 		.maybeSingle<Pick<Profile, 'id' | 'display_name' | 'role' | 'theme' | 'text_size'>>();
 
+	// Turn any due "open on" dates for your own future letters into private notifications.
+	await locals.supabase.rpc('claim_letter_reminders');
+
 	const { count: unread } = await locals.supabase
 		.from('notifications')
 		.select('id', { count: 'exact', head: true })
