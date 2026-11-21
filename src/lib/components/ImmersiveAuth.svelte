@@ -74,7 +74,17 @@
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
-		padding: 28px 56px 32px;
+		width: 100%;
+		padding: 28px clamp(24px, 5vw, 80px) 32px;
+	}
+	/* One centred content column for nav, copy + card, and footer. */
+	.nav,
+	.main,
+	.legal {
+		box-sizing: border-box;
+		width: 100%;
+		max-width: 1280px;
+		margin-inline: auto;
 	}
 	.nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 	.logo { font: 400 26px var(--font-serif); letter-spacing: -0.01em; color: #f7f2ea; }
@@ -217,7 +227,7 @@
 
 	/* Tablet */
 	@container (max-width: 1100px) {
-		.fg { padding: 24px 36px 28px; }
+		.fg { padding-top: 24px; padding-bottom: 28px; }
 		.main { grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); gap: 44px; }
 		.links { gap: 22px; }
 		.links .opt, .quote { display: none; }
@@ -225,7 +235,7 @@
 	/* Phone: scene becomes a top band, the form sits on ivory below. */
 	@container (max-width: 760px) {
 		.bg { bottom: auto; height: 360px; }
-		.fg { padding: 18px 20px 24px; background: linear-gradient(180deg, transparent 360px, #f7f2ea 360px); }
+		.fg { padding-top: 18px; padding-bottom: 24px; background: linear-gradient(180deg, transparent 360px, #f7f2ea 360px); }
 		.links { display: none; }
 		.pill.m { display: inline-flex; min-height: 40px; padding: 0 16px; font-size: 13px; }
 		.main { grid-template-columns: 1fr; gap: 28px; padding: 44px 0 8px; align-items: start; }
