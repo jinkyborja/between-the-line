@@ -4,7 +4,6 @@
 	import ImmersiveAuth from '#lib/components/ImmersiveAuth.svelte';
 	import PasswordInput from '#lib/components/PasswordInput.svelte';
 	import PasswordMeter from '#lib/components/PasswordMeter.svelte';
-	import GoogleButton from '../GoogleButton.svelte';
 	import type { PageProps } from './$types';
 
 	// Full-screen sign-up; shares the immersive shell with sign-in.
@@ -33,7 +32,27 @@
 				<h2>Check your inbox</h2>
 				<p class="sub">We sent a link to <strong class="font-medium text-ink">{form.email}</strong>. Open it to finish making your space.</p>
 			</div>
-			<p class="notice-ok"><Icon name="check" size={18} />It can take a minute to arrive. If you don’t see it, check your spam folder.</p>
+			<p role="status" class="notice-ok">
+				<Icon name="check" size={18} />{form.resent ? 'A new link is on its way.' : 'It can take a minute to arrive.'} If you don’t see it, check your spam folder.
+			</p>
+			{#if form?.resendError}<p role="alert" class="notice-err"><Icon name="alert" size={18} />{form.resendError}</p>{/if}
+			<form
+				method="POST"
+				action="?/resend{q ? '&' + q.slice(1) : ''}"
+				class="flex flex-col"
+				use:enhance={() => {
+					busy = true;
+					return async ({ update }) => {
+						await update({ reset: false });
+						busy = false;
+					};
+				}}
+			>
+				<input type="hidden" name="email" value={form.email} />
+				<button class="btn btn-primary btn-lg w-full" disabled={busy} aria-busy={busy}>
+					{#if busy}<span class="spin" aria-hidden="true"></span>Sending…{:else}Resend verification email{/if}
+				</button>
+			</form>
 			<a href="/auth/login{q}" class="btn btn-ghost btn-lg">Back to sign in</a>
 		</div>
 	{:else}
@@ -73,8 +92,6 @@
 				{#if busy}<span class="spin" aria-hidden="true"></span>Making your space…{:else}Create my account <span class="arr" aria-hidden="true"><Icon name="arrow" size={18} /></span>{/if}
 			</button>
 		</form>
-
-		<GoogleButton {q} />
 
 		<p class="foot">Already have an account? <a href="/auth/login{q}">Sign in</a></p>
 		<p class="privacy">

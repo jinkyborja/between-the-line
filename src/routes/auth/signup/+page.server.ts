@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { safeNext } from '#lib/server/redirect.ts';
-import { MIN_PASSWORD, isEmail, startGoogle } from '#lib/server/auth.ts';
+import { MIN_PASSWORD, isEmail, resendVerification, verifyRedirect } from '#lib/server/auth.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => ({
@@ -27,7 +27,7 @@ export const actions: Actions = {
 			password,
 			options: {
 				data: { display_name: name },
-				emailRedirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(next)}`
+				emailRedirectTo: verifyRedirect(url.origin, next)
 			}
 		});
 
@@ -51,11 +51,11 @@ export const actions: Actions = {
 			});
 		}
 
-		// Email confirmation off → signed in immediately.
+		// Email confirmation off in Supabase → signed in immediately.
 		if (data.session) redirect(303, next);
 
 		// Same response whether or not the address was already registered.
 		return { sent: true, email };
 	},
-	google: startGoogle
+	resend: resendVerification
 };

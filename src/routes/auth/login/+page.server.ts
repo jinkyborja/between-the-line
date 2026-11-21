@@ -1,11 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { safeNext } from '#lib/server/redirect.ts';
-import { startGoogle } from '#lib/server/auth.ts';
+import { resendVerification } from '#lib/server/auth.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => ({
 	next: safeNext(url.searchParams.get('next')),
-	authError: url.searchParams.has('error')
+	authError: url.searchParams.get('error'),
+	verified: url.searchParams.has('verified'),
+	unverified: url.searchParams.has('unverified')
 });
 
 export const actions: Actions = {
@@ -27,13 +29,14 @@ export const actions: Actions = {
 			// Generic otherwise: don't reveal whether an account exists.
 			return fail(400, {
 				email,
+				unconfirmed,
 				message: unconfirmed
-					? 'Please confirm your email first — the link is in your inbox.'
+					? 'Please verify your email first. The link is in your inbox, or send a new one below.'
 					: 'That email and password don’t match. Try again?'
 			});
 		}
 
 		redirect(303, safeNext(url.searchParams.get('next')));
 	},
-	google: startGoogle
+	resend: resendVerification
 };

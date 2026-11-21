@@ -53,11 +53,20 @@ const supabase: Handle = async ({ event, resolve }) => {
 };
 
 const authGuard: Handle = async ({ event, resolve }) => {
-	const { session, user } = await event.locals.safeGetSession();
+	let { session, user } = await event.locals.safeGetSession();
+	const path = event.url.pathname;
+
+	// Unverified email → no access. Clear the session and send them to sign in.
+	// (Accounts from OAuth providers arrive with email_confirmed_at already set.)
+	if (user && !user.email_confirmed_at) {
+		await event.locals.supabase.auth.signOut({ scope: 'local' });
+		session = null;
+		user = null;
+		if (!isPublic(path)) redirect(303, '/auth/login?unverified=1');
+	}
+
 	event.locals.session = session;
 	event.locals.user = user;
-
-	const path = event.url.pathname;
 
 	if (!user && !isPublic(path)) {
 		redirect(303, `/auth/login?next=${encodeURIComponent(path + event.url.search)}`);

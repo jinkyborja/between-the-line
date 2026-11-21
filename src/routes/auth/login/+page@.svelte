@@ -3,12 +3,16 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import ImmersiveAuth from '#lib/components/ImmersiveAuth.svelte';
 	import PasswordInput from '#lib/components/PasswordInput.svelte';
-	import GoogleButton from '../GoogleButton.svelte';
 	import type { PageProps } from './$types';
 
 	// Full-screen sign-in; deliberately outside the shared auth layout.
 	let { data, form }: PageProps = $props();
 	let busy = $state(false);
+	let resending = $state(false);
+	// Offer a new verification email whenever sign-in is blocked by an unverified address.
+	const showResend = $derived(
+		data.unverified || data.authError === 'verify' || !!(form && 'unconfirmed' in form && form.unconfirmed) || !!form?.resent || !!form?.resendError
+	);
 	const q = $derived(data.next !== '/discover' ? `?next=${encodeURIComponent(data.next)}` : '');
 </script>
 
@@ -28,7 +32,15 @@
 		<p class="sub">Your space for words, thoughts, and everything in between.</p>
 	</div>
 
-	{#if data.authError}
+	{#if form?.resent}
+		<p role="status" class="notice-ok"><Icon name="check" size={18} /><span>If <strong class="font-medium">{form.email}</strong> is waiting to be verified, a new link is on its way. Check your spam folder too.</span></p>
+	{:else if data.verified}
+		<p role="status" class="notice-ok"><Icon name="check" size={18} />Your email is verified. Sign in to open your space.</p>
+	{:else if data.unverified}
+		<p role="alert" class="notice-err"><Icon name="alert" size={18} />Please verify your email before continuing. Check your inbox for the link.</p>
+	{:else if data.authError === 'verify'}
+		<p role="alert" class="notice-err"><Icon name="alert" size={18} />That verification link didn’t work. It may have expired or already been used. Try signing in, or send a new link below.</p>
+	{:else if data.authError}
 		<p role="alert" class="notice-err"><Icon name="alert" size={18} />That link didn’t work. It may have expired, so please try again.</p>
 	{/if}
 
@@ -64,7 +76,29 @@
 		</button>
 	</form>
 
-	<GoogleButton {q} />
+	{#if showResend}
+		<form
+			method="POST"
+			action="?/resend{q ? '&' + q.slice(1) : ''}"
+			class="flex flex-col gap-3 border-t border-line-soft pt-5"
+			use:enhance={() => {
+				resending = true;
+				return async ({ update }) => {
+					await update({ reset: false });
+					resending = false;
+				};
+			}}
+		>
+			<label class="auth-label">
+				Didn’t get the verification email?
+				<input class="field" type="email" name="email" placeholder="you@example.com" autocomplete="email" required value={form?.email ?? ''} />
+			</label>
+			{#if form?.resendError}<p role="alert" class="notice-err"><Icon name="alert" size={18} />{form.resendError}</p>{/if}
+			<button class="btn btn-ghost btn-lg w-full" disabled={resending} aria-busy={resending}>
+				{#if resending}<span class="spin" aria-hidden="true"></span>Sending…{:else}Resend verification email{/if}
+			</button>
+		</form>
+	{/if}
 
 	<p class="foot">New here? <a href="/auth/signup{q}">Create an account</a></p>
 	<p class="privacy"><Icon name="lock" size={14} />Journals and letters stay private. Always.</p>
