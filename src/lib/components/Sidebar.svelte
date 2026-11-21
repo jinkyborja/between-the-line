@@ -190,11 +190,32 @@
 		color: var(--color-ink);
 		background: rgb(255 255 255 / 0.35);
 	}
+	.nav-row::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 50%;
+		width: 3px;
+		height: 0;
+		border-radius: 0 2px 2px 0;
+		background: var(--color-rose);
+		transform: translateY(-50%);
+		transition: height var(--t3) var(--ease-out);
+	}
 	.nav-row.on {
 		background: var(--color-card);
 		color: var(--color-ink);
 		font-weight: 600;
-		box-shadow: inset 2px 0 0 var(--color-rose);
+		box-shadow: 0 1px 2px rgb(59 45 39 / 0.06);
+	}
+	.nav-row.on::before {
+		height: 60%;
+	}
+	.nav-row.on :global(svg) {
+		color: var(--color-rose);
+	}
+	.nav-row:focus-visible {
+		outline-offset: -2px;
 	}
 	.count {
 		min-width: 20px;

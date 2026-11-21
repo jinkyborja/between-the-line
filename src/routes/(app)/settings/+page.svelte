@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import PasswordInput from '#lib/components/PasswordInput.svelte';
 	import { untrack } from 'svelte';
 	import type { IconName } from '#lib/icons.ts';
 	import Icon from '#lib/components/Icon.svelte';
@@ -87,10 +88,10 @@
 					<p class="sd">{data.hasPassword ? 'Choose something long and memorable.' : 'You sign in with Google, so there’s no password to change here.'}</p></div>
 				{#if data.hasPassword}
 					<form method="POST" action="?/password" class="flex flex-col gap-5" use:enhance={submit('password', true)}>
-						<label class="auth-label">Current password<input class="field" type="password" name="current" autocomplete="current-password" required /></label>
-						<label class="auth-label">New password<input class="field" type="password" name="new" minlength="10" autocomplete="new-password" required bind:value={newPassword} /></label>
+						<label class="auth-label">Current password<PasswordInput name="current" autocomplete="current-password" required /></label>
+						<label class="auth-label">New password<PasswordInput name="new" minlength={10} autocomplete="new-password" required bind:value={newPassword} /></label>
 						<PasswordMeter password={newPassword} />
-						<label class="auth-label">Confirm new password<input class="field" type="password" name="confirm" autocomplete="new-password" required /></label>
+						<label class="auth-label">Confirm new password<PasswordInput name="confirm" autocomplete="new-password" required /></label>
 						{@render feedback('password')}
 						<button class="btn btn-primary self-start" disabled={busy === 'password'}>{busy === 'password' ? 'Updating…' : 'Update password'}</button>
 					</form>

@@ -27,7 +27,7 @@
 
 	<div class="flex min-w-0 flex-1 flex-col">
 		<!-- Phone top bar -->
-		<header class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line-soft bg-[rgb(247_242_234/0.94)] py-1.5 pr-2 pl-5 backdrop-blur md:hidden">
+		<header class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line-soft bg-[color-mix(in_srgb,var(--color-paper)_94%,transparent)] py-1.5 pr-2 pl-5 backdrop-blur md:hidden">
 			<Wordmark href="/discover" size={20} />
 			<span class="flex items-center">
 				<a href="/notifications" class="icon-btn" aria-label="Notifications{data.unreadNotifications ? `, ${data.unreadNotifications} unread` : ''}">

@@ -3,6 +3,7 @@
 	import { navigating, page } from '$app/state';
 	import { untrack } from 'svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import PoemCard from '#lib/components/PoemCard.svelte';
 	import SearchField from '#lib/components/SearchField.svelte';
@@ -101,7 +102,14 @@
 
 	<!-- Search + filters -->
 	<section class="controls flex flex-col gap-4" aria-label="Find a poem">
-		<SearchField bind:value={q} oninput={onSearch} label="Search the library" placeholder="Search by title, poet or a line you remember" />
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+			<div class="min-w-0 flex-1"><SearchField bind:value={q} oninput={onSearch} label="Search the library" placeholder="Search by title, poet or a line you remember" /></div>
+			<div role="group" aria-label="Type" class="seg self-start sm:self-auto">
+				{#each [['', 'All'], ['poem', 'Poems'], ['quote', 'Quotes']] as [k, label] (k)}
+					<button aria-pressed={data.filters.kind === k} onclick={() => setParam({ kind: k })}>{label}</button>
+				{/each}
+			</div>
+		</div>
 		<div role="group" aria-label="Filter by feeling" class="chips">
 			<button class="chip" aria-pressed={!data.filters.category} onclick={() => setParam({ category: '' })}>All feelings</button>
 			{#each data.categories as c (c.id)}
@@ -109,14 +117,9 @@
 			{/each}
 		</div>
 		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-3">
-			<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-				<div role="group" aria-label="Type" class="seg">
-					{#each [['', 'All'], ['poem', 'Poems'], ['quote', 'Quotes']] as [k, label] (k)}
-						<button aria-pressed={data.filters.kind === k} onclick={() => setParam({ kind: k })}>{label}</button>
-					{/each}
-				</div>
-				<span class="text-[13px] text-subtle" aria-live="polite">{countLabel}</span>
-				{#if filtered}<button class="btn btn-quiet btn-sm min-h-8! px-2!" onclick={clearAll}>Clear</button>{/if}
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+				<span class="text-[13px] text-body" aria-live="polite">{countLabel}</span>
+				{#if filtered}<button class="clear" onclick={clearAll}><Icon name="close" size={14} />Clear filters</button>{/if}
 			</div>
 			<div class="relative">
 				<button class="btn btn-quiet btn-sm" aria-haspopup="listbox" aria-expanded={sortOpen} onclick={() => (sortOpen = !sortOpen)}>
@@ -248,6 +251,35 @@
 	.seg button[aria-pressed='true'] {
 		background: var(--color-espresso);
 		color: var(--color-cream);
+	}
+	/* Filters stay in reach while browsing on larger screens. */
+	@media (min-width: 768px) {
+		.controls {
+			position: sticky;
+			top: 0;
+			z-index: 15;
+			margin: 0 -12px;
+			padding: 14px 12px 12px;
+			background: color-mix(in srgb, var(--color-paper) 94%, transparent);
+			backdrop-filter: blur(8px);
+		}
+	}
+	.clear {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-height: 30px;
+		padding: 0 10px;
+		border: 1px solid var(--color-line-strong);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--color-body);
+		font: 500 12px var(--font-sans);
+		transition: border-color var(--t2), color var(--t2);
+	}
+	.clear:hover {
+		border-color: var(--color-rose);
+		color: var(--color-rose);
 	}
 	.chev {
 		transition: transform var(--t2) var(--ease-out);

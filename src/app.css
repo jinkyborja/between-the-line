@@ -260,23 +260,54 @@
 			border-color var(--t2) var(--ease-out),
 			box-shadow var(--t2) var(--ease-out);
 	}
+	.field::placeholder {
+		color: var(--color-subtle);
+		opacity: 0.8;
+	}
+	.field:hover:not(:focus):not(:disabled) {
+		border-color: var(--color-line-hover);
+	}
 	.field:focus {
 		border-color: var(--color-rose);
-		box-shadow: 0 0 0 3px rgb(142 74 79 / 0.14);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-rose) 16%, transparent);
+	}
+	.field[aria-invalid='true'] {
+		border-color: var(--color-danger);
+	}
+	/* 16px on phones stops iOS from zooming into the field. */
+	@media (max-width: 639px) {
+		.field {
+			font-size: 16px;
+		}
 	}
 	textarea.field {
 		height: auto;
 		padding: 12px 14px;
 	}
 
+	.auth-head {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin-bottom: 4px;
+	}
+	.auth-eyebrow {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--color-rose);
+	}
 	.auth-h1 {
 		margin: 0;
 		font-family: var(--font-serif);
 		font-weight: 300;
-		font-size: 40px;
+		font-size: clamp(32px, 6vw, 40px);
 		line-height: 1.1;
 		letter-spacing: -0.02em;
 		color: var(--color-ink);
+		text-wrap: balance;
 	}
 	.auth-sub {
 		margin: 0;
@@ -292,14 +323,71 @@
 		font-weight: 500;
 		color: var(--color-body);
 	}
-	.notice-err {
+	.field-hint {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--color-subtle);
+	}
+	.field-error {
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-danger);
+	}
+	.auth-foot {
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+	.notice-err,
+	.notice-ok {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
 		margin: 0;
 		padding: 12px 14px;
-		background: #f8ecea;
-		border: 1px solid #e8ccc8;
+		border-radius: var(--radius-xs);
 		font-size: 14px;
 		line-height: 1.5;
+	}
+	.notice-err {
+		background: color-mix(in srgb, var(--color-danger) 8%, var(--color-sheet));
+		border: 1px solid color-mix(in srgb, var(--color-danger) 28%, transparent);
 		color: var(--color-danger);
+	}
+	.notice-ok {
+		background: var(--color-rose-tint);
+		border: 1px solid color-mix(in srgb, var(--color-dusty) 70%, transparent);
+		color: var(--color-ink-2);
+	}
+	/* Small inline spinner for buttons that are working. */
+	.spin {
+		width: 15px;
+		height: 15px;
+		flex: none;
+		border-radius: 50%;
+		border: 2px solid currentColor;
+		border-right-color: transparent;
+		animation: spin 0.8s linear infinite;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.spin {
+			animation-duration: 2.4s;
+		}
+	}
+	.notice-err > svg,
+	.notice-ok > svg {
+		flex: none;
+		margin-top: 2px;
 	}
 
 	.eyebrow {

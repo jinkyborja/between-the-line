@@ -36,8 +36,8 @@
 	{/if}
 
 	<div class="foot">
-		<span class="text-ink-3">{poem.author}</span>
-		{#if footer}<span>{footer}</span>{/if}
+		<span class="min-w-0 truncate"><span class="text-subtle">by</span> <span class="font-medium text-ink-3">{poem.author}</span></span>
+		{#if footer}<span class="flex-none">{footer}</span>{:else}<span class="read" aria-hidden="true">Read →</span>{/if}
 	</div>
 </article>
 
@@ -98,6 +98,27 @@
 		border-top: 1px solid var(--color-line-soft);
 		font-size: 13px;
 		color: var(--color-subtle);
+	}
+	.read {
+		flex: none;
+		color: var(--color-rose);
+		font-weight: 500;
+		opacity: 0;
+		transform: translateX(-4px);
+		transition:
+			opacity var(--t3) var(--ease-out),
+			transform var(--t3) var(--ease-out);
+	}
+	.pcard:hover .read,
+	.pcard:focus-within .read {
+		opacity: 1;
+		transform: none;
+	}
+	@media (hover: none) {
+		.read {
+			opacity: 1;
+			transform: none;
+		}
 	}
 	article :global(.bm) {
 		position: relative;

@@ -1,236 +1,225 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import Wordmark from '#lib/components/Wordmark.svelte';
-	import { excerpt, roman } from '#lib/poem.ts';
+	import { excerpt } from '#lib/poem.ts';
+	import type { IconName } from '#lib/icons.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	// One evocative line per category, from the design.
-	const lines: Record<string, string> = {
-		love: 'For the ones who stayed.',
-		heartbreak: 'For what broke open.',
-		relationships: 'For the in-between of two people.',
-		longing: 'For what is far, or gone.',
-		healing: 'For the slow mending.',
-		'self-love': 'For learning to stay with yourself.',
-		growth: 'For who you are becoming.',
-		life: 'For ordinary, astonishing days.',
-		friendship: 'For the ones who know your silences.',
-		'letting-go': 'For doors that have finished being doors.'
-	};
+	const features: { icon: IconName; title: string; text: string; tag: string }[] = [
+		{ icon: 'library', title: 'Poetry & quotes', text: 'Original poems and short lines on love, loss, healing and becoming, set for slow, comfortable reading.', tag: 'Read' },
+		{ icon: 'journal', title: 'Private journal', text: 'Write what a poem stirred in you. Moods, prompts and autosave help, and every entry stays yours alone.', tag: 'Private' },
+		{ icon: 'envelope', title: 'Letters to myself', text: 'Write to your past, present or future self, or keep the letters you never sent. Set a day to read one again.', tag: 'Private' },
+		{ icon: 'community', title: 'Anonymous community', text: 'When you want to, share a separate post. No names, photos or profiles. Just words and gentle replies.', tag: 'Anonymous' }
+	];
 
-	// Illustrative examples of what an anonymous reflection looks like (not live posts).
-	const examples = [
-		{ poem: 'The Kettle Still Remembers', text: 'I moved apartments so I wouldn’t see his side of the bed. I still bought two toothbrushes the first week. This poem made me laugh and cry at the same time.' },
-		{ poem: 'Unsent', text: 'My drawer is a notes app. Forty-one drafts to my father. I think I’ll keep them there — not every letter is meant to be delivered.' },
-		{ poem: 'Inventory', text: 'Tried this tonight: made a list of what stayed. My sister. Sunday rice. The plant I keep forgetting to water that refuses to die. Longer than I thought.' }
+	const steps: { icon: IconName; title: string; text: string }[] = [
+		{ icon: 'search', title: 'Discover words that resonate', text: 'Browse poems and quotes by feeling, or start with the poem of the day.' },
+		{ icon: 'pen', title: 'Reflect and write privately', text: 'Answer in your journal or in a letter to yourself. Only you can read it.' },
+		{ icon: 'community', title: 'Share anonymously, if you choose', text: 'Sharing is always a separate step you take on purpose. Never automatic.' }
+	];
+
+	const promises: { icon: IconName; title: string; text: string }[] = [
+		{ icon: 'lock', title: 'Your journal is private', text: 'Entries are visible only to you. Not other readers, not moderators.' },
+		{ icon: 'envelope', title: 'Your letters are private', text: 'Letters to yourself, sent or unsent, never leave your account.' },
+		{ icon: 'community', title: 'The community is anonymous', text: 'Posts and comments show “Anonymous”. There are no public profiles.' },
+		{ icon: 'shield', title: 'Nothing is published for you', text: 'Private writing is never shared automatically. You decide, every time.' }
 	];
 </script>
 
 <svelte:head>
-	<title>Between the Lines — a quiet place for what goes unsaid</title>
+	<title>Between the Lines: a quiet place for what goes unsaid</title>
+	<meta name="description" content="Read poetry, reflect in a private journal, write letters to yourself, and share anonymously when you choose." />
 </svelte:head>
 
 <div class="page-in min-h-screen bg-paper">
-	<!-- Top navigation -->
-	<header class="border-b border-line">
-		<nav aria-label="Main" class="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-			<Wordmark size={26} />
-			<div class="flex flex-wrap items-center gap-5 sm:gap-7">
-				<a class="navlink hidden sm:inline" href="/library">Poems</a>
-				<a class="navlink hidden sm:inline" href="/community">Community</a>
-				<a class="navlink hidden md:inline" href="#about">About</a>
-				<a class="navlink hidden md:inline" href="#guidelines">Guidelines</a>
-				<a class="navlink" href="/auth/login">Sign in</a>
-				<a class="btn btn-primary" href="/auth/signup">Start writing</a>
+	<a href="#main" class="skip">Skip to content</a>
+
+	<header class="top">
+		<nav aria-label="Main" class="wrap flex items-center justify-between gap-4 py-4">
+			<Wordmark size={24} />
+			<div class="flex items-center gap-2 sm:gap-6">
+				<a class="navlink hidden md:inline-flex" href="#about">About</a>
+				<a class="navlink hidden md:inline-flex" href="#features">Features</a>
+				<a class="navlink hidden md:inline-flex" href="#privacy">Privacy</a>
+				<a class="navlink inline-flex px-2" href="/auth/login">Sign in</a>
+				<a class="btn btn-primary hidden sm:inline-flex" href="/auth/signup">Create an account</a>
 			</div>
 		</nav>
 	</header>
 
-	<!-- Hero -->
-	<div class="relative overflow-hidden">
-		<div class="drift drift-a" aria-hidden="true"></div>
-		<div class="drift drift-b" aria-hidden="true"></div>
-		<div class="grain" aria-hidden="true"></div>
-		<section class="relative mx-auto grid max-w-[1240px] grid-cols-[repeat(auto-fit,minmax(min(460px,100%),1fr))] items-center gap-16 px-5 pt-16 pb-24 sm:px-8 lg:gap-[72px] lg:pt-24 lg:pb-28">
-			<div class="fade flex flex-col gap-8">
-				<p class="eyebrow m-0 text-xs text-subtle">A quiet place for what goes unsaid</p>
-				<h1 class="m-0 font-serif text-[clamp(40px,5.4vw,72px)] leading-[1.04] font-light tracking-[-0.025em] text-balance text-ink">
-					Some feelings are difficult to explain. <em class="text-rose">Here, you don’t have to.</em>
-				</h1>
-				<p class="m-0 max-w-[500px] text-lg leading-[1.65] text-muted">
-					Read short poems about love, loss and becoming. Then write what they stirred in you — kept privately in your
-					journal, or shared anonymously with people who understand.
-				</p>
-				<div class="flex flex-wrap gap-3">
-					<a class="btn btn-primary" href="/auth/signup">Just write <span class="arr"><Icon name="arrow" size={18} /></span></a>
-					<a class="btn btn-ghost" href="/library">Explore poems</a>
-				</div>
-				<p class="m-0 flex items-center gap-2 text-[13px] text-subtle">
-					<Icon name="lock" size={16} />Every reflection is private. Sharing is always a separate, anonymous step.
-				</p>
-			</div>
-
-			{#if data.poem}
-				<!-- Featured poem, set like a page -->
-				<figure class="fade2 relative m-0">
-					<div aria-hidden="true" class="absolute inset-[18px_-14px_-18px_14px] border border-line bg-[#EFE6D9]"></div>
-					<div class="relative border border-line bg-sheet px-7 pt-10 pb-8 shadow-[0_30px_60px_-40px_rgba(63,50,43,.5)] sm:px-14 sm:pt-14 sm:pb-11">
-						<div class="mb-9 flex items-center justify-between">
-							<span class="eyebrow text-rose">Poem of the day{data.poem.category ? ` · ${data.poem.category.name}` : ''}</span>
-						</div>
-						<h2 class="m-0 mb-7 font-serif text-[30px] font-normal tracking-[-0.01em] text-ink sm:text-[34px]">{data.poem.title}</h2>
-						<blockquote class="m-0 font-serif text-[19px] leading-[1.7] whitespace-pre-line text-ink-3 sm:text-[21px]">{excerpt(data.poem.body)}</blockquote>
-						<div class="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-line-soft pt-6">
-							<cite class="text-sm text-muted not-italic">— {data.poem.author}</cite>
-							<a href="/read/{data.poem.slug}" class="inline-flex items-center gap-1.5 text-sm font-medium">Read &amp; reflect <span class="arr"><Icon name="arrow" size={16} /></span></a>
-						</div>
+	<main id="main">
+		<!-- Hero -->
+		<div class="relative overflow-hidden">
+			<div class="glow" aria-hidden="true"></div>
+			<section class="wrap hero relative">
+				<div class="fade flex flex-col gap-7">
+					<p class="eyebrow m-0 text-xs text-rose">A quiet place for what goes unsaid</p>
+					<h1 class="m-0 font-serif text-[clamp(38px,5.6vw,72px)] leading-[1.04] font-light tracking-[-0.025em] text-balance text-ink">
+						Some feelings are difficult to explain. <em class="text-rose">Here, you don’t have to.</em>
+					</h1>
+					<p class="m-0 max-w-[520px] text-[17px] leading-[1.7] text-muted sm:text-lg">
+						Read short poems and quotes, then write what they stir in you: in a private journal, in letters to yourself, or
+						anonymously with people who understand.
+					</p>
+					<div class="flex flex-wrap gap-3">
+						<a class="btn btn-primary btn-lg" href="/auth/signup">Create an account <span class="arr"><Icon name="arrow" size={18} /></span></a>
+						<a class="btn btn-ghost btn-lg" href="#features">Explore the space</a>
 					</div>
-				</figure>
-			{/if}
-		</section>
-	</div>
-
-	<!-- Philosophy band -->
-	<section id="about" class="bg-espresso text-cream-2">
-		<div class="mx-auto flex max-w-[920px] flex-col items-center gap-7 px-5 py-20 text-center sm:px-8 sm:py-[104px]">
-			<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D9B3AE" stroke-width="1.2" aria-hidden="true"><path d="M4 7h16v10H4z" /><path d="m4 7 8 6 8-6" /></svg>
-			<p class="m-0 font-serif text-[clamp(28px,3.4vw,44px)] leading-[1.3] font-light tracking-[-0.01em] text-balance italic">
-				“Some feelings are difficult to explain. Here, you don’t have to. Just write.”
-			</p>
-			<p class="eyebrow m-0 text-xs text-[#CDBFB0]">Our only philosophy</p>
-		</div>
-	</section>
-
-	<!-- How it works -->
-	<section class="mx-auto max-w-[1240px] px-5 pt-24 pb-20 sm:px-8 lg:pt-[120px] lg:pb-24">
-		<div class="mb-16 flex flex-wrap items-end justify-between gap-6">
-			<h2 class="m-0 max-w-[560px] font-serif text-[clamp(32px,3.6vw,48px)] leading-[1.1] font-light tracking-[-0.02em] text-ink">A slower way to sit with what you feel.</h2>
-			<p class="m-0 max-w-[380px] text-base leading-[1.65] text-muted">No feeds to keep up with, no follower counts, no names. Just words, and the space to answer them.</p>
-		</div>
-		<div class="steps grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] border-t border-[#D8CCBD]">
-			{#each [
-				['Read slowly', 'Original poems and short pieces, set for unhurried reading. One a day, or as many as you need.'],
-				['Write what it means', 'Gentle prompts help you begin. A memory, a single line, a whole letter — there is no wrong way to answer.'],
-				['Keep it, or share it anonymously', 'Reflections live in your private journal. If you want to, you can write a separate anonymous post for the community.']
-			] as [title, text], i (title)}
-				<div class="step flex flex-col gap-4 py-10">
-					<span class="font-serif text-xl text-rose italic">{roman(i)}.</span>
-					<h3 class="m-0 font-serif text-[26px] font-normal text-ink">{title}</h3>
-					<p class="m-0 text-[15px] leading-[1.7] text-muted">{text}</p>
+					<p class="m-0 flex items-center gap-2 text-[13px] text-subtle">
+						<Icon name="lock" size={16} />Free. Private by default. Sharing is always your choice.
+					</p>
 				</div>
-			{/each}
-		</div>
-	</section>
 
-	<!-- Categories -->
-	<section class="border-y border-line bg-sand">
-		<div class="mx-auto max-w-[1240px] px-5 py-20 sm:px-8 lg:py-[104px]">
-			<div class="mb-12 flex flex-wrap items-end justify-between gap-6">
-				<div class="flex flex-col gap-3.5">
-					<p class="eyebrow m-0 text-xs text-subtle">The library</p>
-					<h2 class="m-0 font-serif text-[clamp(32px,3.6vw,48px)] font-light tracking-[-0.02em] text-ink">Find the words for where you are.</h2>
+				{#if data.poem}
+					<figure class="fade2 relative m-0">
+						<div aria-hidden="true" class="paper-back"></div>
+						<div class="relative rounded-xs border border-line bg-sheet px-7 pt-9 pb-8 shadow-raised sm:px-12 sm:pt-12 sm:pb-10">
+							<p class="eyebrow m-0 mb-7 text-rose">Poem of the day{data.poem.category ? ` · ${data.poem.category.name}` : ''}</p>
+							<h2 class="m-0 mb-6 font-serif text-[28px] font-normal tracking-[-0.01em] text-ink sm:text-[34px]">{data.poem.title}</h2>
+							<blockquote class="m-0 font-serif text-[18px] leading-[1.75] whitespace-pre-line text-ink-3 sm:text-[20px]">{excerpt(data.poem.body)}</blockquote>
+							<div class="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-line-soft pt-5">
+								<cite class="text-sm text-muted not-italic">by {data.poem.author}</cite>
+								<a href="/auth/login?next={encodeURIComponent(`/read/${data.poem.slug}`)}" class="inline-flex items-center gap-1.5 text-sm font-medium">Read &amp; reflect <span class="arr"><Icon name="arrow" size={16} /></span></a>
+							</div>
+						</div>
+					</figure>
+				{/if}
+			</section>
+		</div>
+
+		<!-- Purpose -->
+		<section id="about" class="band">
+			<div class="wrap grid items-center gap-10 py-20 md:grid-cols-[1fr_1.1fr] md:gap-16 lg:py-28">
+				<div class="flex flex-col gap-4">
+					<p class="eyebrow m-0 text-xs text-[var(--color-dusty)]">Our purpose</p>
+					<h2 class="m-0 font-serif text-[clamp(30px,3.6vw,46px)] leading-[1.12] font-light tracking-[-0.02em] text-balance">
+						A gentle place to put the things you carry quietly.
+					</h2>
 				</div>
-				<a href="/library" class="text-[15px] font-medium">Browse all poems →</a>
+				<div class="flex flex-col gap-5 text-[16px] leading-[1.75] text-[var(--band-text)]">
+					<p class="m-0">
+						Some days a poem says what you couldn’t. Other days you need somewhere to write it yourself, without an audience,
+						without being judged.
+					</p>
+					<p class="m-0">
+						Between the Lines brings the two together: words to read slowly, and a private space to answer them. No feeds to
+						keep up with, no follower counts, no names.
+					</p>
+				</div>
 			</div>
-			<div class="grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-4">
-				{#each data.categories as c, i (c.id)}
-					<a class="card cat flex min-h-[168px] flex-col justify-between gap-10 rounded-xs border border-line bg-card p-6 text-ink-2 hover:text-ink-2" href="/library?category={c.slug}">
-						<span class="font-serif text-sm text-rose italic">{roman(i)}.</span>
-						<span class="flex flex-col gap-1.5">
-							<span class="flex items-baseline justify-between"><span class="font-serif text-[26px] text-ink">{c.name}</span><span class="cat-arrow text-[#A39486]">→</span></span>
-							<span class="text-[13px] leading-normal text-subtle">{lines[c.slug] ?? c.description}</span>
-						</span>
-					</a>
+		</section>
+
+		<!-- Features -->
+		<section id="features" class="wrap py-20 lg:py-28">
+			<div class="mb-12 flex max-w-[620px] flex-col gap-3">
+				<p class="eyebrow m-0 text-xs text-subtle">What’s inside</p>
+				<h2 class="sec-title">Four quiet rooms, one for each kind of feeling.</h2>
+			</div>
+			<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+				{#each features as f (f.title)}
+					<article class="feature">
+						<span class="ficon" aria-hidden="true"><Icon name={f.icon} size={22} /></span>
+						<h3 class="m-0 font-serif text-[23px] font-normal text-ink">{f.title}</h3>
+						<p class="m-0 flex-1 text-[15px] leading-[1.65] text-muted">{f.text}</p>
+						<span class="ftag">{#if f.tag === 'Private'}<Icon name="lock" size={13} />{/if}{f.tag}</span>
+					</article>
 				{/each}
 			</div>
-		</div>
-	</section>
+		</section>
 
-	<!-- Community reflections (illustrative) -->
-	<section class="mx-auto max-w-[1240px] px-5 py-24 sm:px-8 lg:py-[120px]">
-		<div class="mb-14 flex max-w-[640px] flex-col gap-3.5">
-			<p class="eyebrow m-0 text-xs text-subtle">The anonymous community</p>
-			<h2 class="m-0 font-serif text-[clamp(32px,3.6vw,48px)] leading-[1.1] font-light tracking-[-0.02em] text-ink">What readers find in the same lines.</h2>
-			<p class="m-0 text-[15px] leading-relaxed text-muted">Examples of the kind of reflections people share. In the community, every post is anonymous — no names, no photos, no profiles.</p>
-		</div>
-		<div class="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-6">
-			{#each examples as r (r.poem)}
-				<article class="card card-q flex flex-col gap-6 rounded-xs border border-line bg-card p-8">
-					<p class="m-0 text-xs text-subtle">On <em class="font-serif text-sm text-rose">{r.poem}</em></p>
-					<p class="m-0 flex-1 font-serif text-[19px] leading-[1.6] text-ink-3">{r.text}</p>
-					<div class="flex items-center justify-between border-t border-line-soft pt-5">
-						<span class="flex items-center gap-2.5 text-[13px] text-body">
-							<span class="inline-flex size-[30px] items-center justify-center rounded-full bg-[#8B7B6B] text-cream" aria-hidden="true"><Icon name="community" size={15} /></span>Anonymous
-						</span>
-						<span class="text-xs text-subtle italic">Example</span>
-					</div>
-				</article>
-			{/each}
-		</div>
-	</section>
+		<!-- How it works -->
+		<section class="border-y border-line bg-sand-2">
+			<div class="wrap py-20 lg:py-28">
+				<div class="mb-12 flex max-w-[620px] flex-col gap-3">
+					<p class="eyebrow m-0 text-xs text-subtle">How it works</p>
+					<h2 class="sec-title">A slower way to sit with what you feel.</h2>
+				</div>
+				<ol class="steps m-0 grid list-none gap-10 p-0 md:grid-cols-3 md:gap-8">
+					{#each steps as s, i (s.title)}
+						<li class="flex flex-col gap-4">
+							<span class="flex items-center gap-3">
+								<span class="num">{i + 1}</span>
+								<span class="h-px flex-1 bg-line-strong" aria-hidden="true"></span>
+								<span class="text-mocha" aria-hidden="true"><Icon name={s.icon} size={20} /></span>
+							</span>
+							<h3 class="m-0 font-serif text-[24px] leading-[1.25] font-normal text-ink">{s.title}</h3>
+							<p class="m-0 text-[15px] leading-[1.7] text-muted">{s.text}</p>
+						</li>
+					{/each}
+				</ol>
+			</div>
+		</section>
 
-	<!-- Privacy -->
-	<section id="guidelines" class="mx-auto max-w-[1240px] px-5 pb-24 sm:px-8 lg:pb-[120px]">
-		<div id="privacy" class="grid grid-cols-[repeat(auto-fit,minmax(min(440px,100%),1fr))] border border-[#D8CCBD] bg-card">
-			<div class="flex flex-col gap-5 border-line p-8 sm:p-14 lg:border-r">
-				<h2 class="m-0 font-serif text-[40px] leading-[1.1] font-light tracking-[-0.02em] text-ink">Your journal is yours.</h2>
-				<p class="m-0 text-base leading-[1.7] text-muted">
-					Journal entries are never shown to anyone — not other readers, not moderators. Nothing you write in your journal is
-					ever published automatically. If you want to share, you write a separate anonymous post, on purpose.
-				</p>
-				<ul class="m-0 flex list-none flex-col gap-2 p-0 text-[15px] leading-relaxed text-body">
-					<li>— Be gentle. Everyone here is carrying something.</li>
-					<li>— Anonymous means anonymous. Don’t guess, don’t ask.</li>
-					<li>— If you’re in danger, please contact local emergency services.</li>
+		<!-- Privacy & safety -->
+		<section id="privacy" class="wrap py-20 lg:py-28">
+			<div class="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+				<div class="flex flex-col gap-5">
+					<p class="eyebrow m-0 text-xs text-subtle">Privacy &amp; safety</p>
+					<h2 class="sec-title">What you write here is yours.</h2>
+					<p class="m-0 text-base leading-[1.75] text-muted">
+						Privacy isn’t a setting you have to find. It’s how the space is built. Private writing is protected by the
+						database itself, and anything shared is stripped of who wrote it.
+					</p>
+					<ul id="guidelines" class="m-0 flex list-none flex-col gap-2.5 border-l-2 border-[var(--color-dusty)] p-0 pl-5 text-[15px] leading-relaxed text-body">
+						<li>Be gentle. Everyone here is carrying something.</li>
+						<li>Anonymous means anonymous. Don’t guess, don’t ask.</li>
+						<li>If you’re in danger, please contact local emergency services.</li>
+					</ul>
+				</div>
+				<ul class="m-0 grid list-none gap-4 p-0 sm:grid-cols-2">
+					{#each promises as p (p.title)}
+						<li class="promise">
+							<span class="picon" aria-hidden="true"><Icon name={p.icon} size={18} /></span>
+							<strong class="text-[15px] font-semibold text-ink">{p.title}</strong>
+							<span class="text-sm leading-[1.6] text-muted">{p.text}</span>
+						</li>
+					{/each}
 				</ul>
 			</div>
-			<div class="flex flex-col justify-center gap-4 p-8 sm:p-14">
-				<div class="flex items-start gap-4 border border-espresso bg-paper p-5">
-					<span class="inline-flex size-10 flex-none items-center justify-center rounded-full bg-espresso text-cream"><Icon name="lock" size={18} /></span>
-					<span class="flex flex-col gap-1"><strong class="text-[15px] font-semibold text-ink">Private · only you</strong><span class="text-sm leading-[1.55] text-muted">Every journal entry. Always. Lives only in My Journal.</span></span>
-				</div>
-				<div class="flex items-start gap-4 border border-line p-5">
-					<span class="inline-flex size-10 flex-none items-center justify-center rounded-full bg-[#EAE3D9] text-body">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18" /><path d="M10.6 6.1A9.9 9.9 0 0 1 12 6c5 0 9 6 9 6a17 17 0 0 1-3 3.4M6.6 6.6C4.3 8.1 3 12 3 12s4 6 9 6a8.8 8.8 0 0 0 3.4-.7" /></svg>
-					</span>
-					<span class="flex flex-col gap-1"><strong class="text-[15px] font-semibold text-ink">Community · anonymous</strong><span class="text-sm leading-[1.55] text-muted">A separate post you choose to write. No name, photo or profile — ever.</span></span>
-				</div>
-				<div class="flex items-start gap-4 border border-line p-5">
-					<span class="inline-flex size-10 flex-none items-center justify-center rounded-full bg-rose-tint text-rose"><Icon name="shield" size={18} /></span>
-					<span class="flex flex-col gap-1"><strong class="text-[15px] font-semibold text-ink">No public profiles</strong><span class="text-sm leading-[1.55] text-muted">Your account page is visible to you alone.</span></span>
+		</section>
+
+		<!-- Final call to action -->
+		<section class="wrap pb-20 lg:pb-28">
+			<div class="cta">
+				<h2 class="m-0 font-serif text-[clamp(34px,4.6vw,58px)] leading-[1.06] font-light tracking-[-0.025em] text-balance">
+					Write the first line.<br /><em class="text-[var(--color-dusty)]">The rest will follow.</em>
+				</h2>
+				<p class="m-0 max-w-[460px] text-base leading-[1.7] text-[var(--band-text)]">It takes a moment to begin, and nothing you write is shared unless you choose.</p>
+				<div class="flex flex-wrap justify-center gap-3">
+					<a class="btn btn-lg cta-btn" href="/auth/signup">Create an account</a>
+					<a class="btn btn-lg cta-ghost" href="/auth/login">I already have one</a>
 				</div>
 			</div>
-		</div>
-	</section>
+		</section>
+	</main>
 
-	<!-- Closing CTA -->
-	<section class="border-t border-line">
-		<div class="mx-auto flex max-w-[820px] flex-col items-center gap-8 px-5 py-24 text-center sm:px-8 lg:py-[120px]">
-			<h2 class="m-0 font-serif text-[clamp(40px,5vw,64px)] leading-[1.05] font-light tracking-[-0.025em] text-ink">
-				Write the first line.<br /><em class="text-rose">The rest will follow.</em>
-			</h2>
-			<a class="btn btn-primary" href="/auth/signup">Start writing — it’s free</a>
-		</div>
-	</section>
-
-	<!-- Footer -->
-	<footer class="border-t border-line bg-skel">
-		<div class="mx-auto flex max-w-[1240px] flex-col gap-10 px-5 pt-14 pb-10 sm:px-8">
-			<div class="flex flex-wrap justify-between gap-8">
+	<footer class="border-t border-line bg-sand">
+		<div class="wrap flex flex-col gap-10 pt-14 pb-10">
+			<div class="flex flex-wrap justify-between gap-10">
 				<div class="flex max-w-[320px] flex-col gap-3">
-					<Wordmark size={24} />
+					<Wordmark size={22} />
 					<span class="text-sm leading-[1.6] text-muted">A quiet space for reading, reflecting and writing what you couldn’t say out loud.</span>
 				</div>
-				<nav aria-label="Footer" class="flex flex-wrap items-start gap-8">
-					<a class="navlink" href="#about">About</a>
-					<a class="navlink" href="#privacy">Privacy</a>
-					<a class="navlink" href="#guidelines">Guidelines</a>
-				</nav>
+				<div class="flex flex-wrap gap-12">
+					<nav aria-label="Explore" class="flex flex-col items-start gap-1">
+						<span class="fhead">Explore</span>
+						<a class="navlink inline-flex" href="#about">About</a>
+						<a class="navlink inline-flex" href="#features">Features</a>
+						<a class="navlink inline-flex" href="#privacy">Privacy &amp; safety</a>
+						<a class="navlink inline-flex" href="#guidelines">Community guidelines</a>
+					</nav>
+					<nav aria-label="Account" class="flex flex-col items-start gap-1">
+						<span class="fhead">Account</span>
+						<a class="navlink inline-flex" href="/auth/signup">Create an account</a>
+						<a class="navlink inline-flex" href="/auth/login">Sign in</a>
+						<a class="navlink inline-flex" href="/auth/forgot">Forgot password</a>
+					</nav>
+				</div>
 			</div>
 			<div class="flex flex-wrap justify-between gap-4 border-t border-line-strong pt-6 text-[13px] text-subtle">
-				<span>© 2026 Between the Lines</span>
+				<span>© 2026 Between the Lines. Journals and letters are private; community posts are anonymous.</span>
 				<span class="font-serif text-[15px] italic">Made for the things we carry quietly.</span>
 			</div>
 		</div>
@@ -238,13 +227,78 @@
 </div>
 
 <style>
+	.wrap {
+		width: 100%;
+		max-width: 1200px;
+		margin-inline: auto;
+		padding-inline: 20px;
+	}
+	@media (min-width: 640px) {
+		.wrap {
+			padding-inline: 32px;
+		}
+	}
+	.skip {
+		position: absolute;
+		left: 12px;
+		top: -60px;
+		z-index: 60;
+		padding: 10px 14px;
+		background: var(--color-espresso);
+		color: var(--color-cream);
+	}
+	.skip:focus {
+		top: 12px;
+	}
+	.top {
+		position: sticky;
+		top: 0;
+		z-index: 40;
+		background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid var(--color-line);
+	}
 	.navlink {
+		align-items: center;
+		min-height: 36px;
 		color: var(--color-body);
 		font-size: 14px;
 		transition: color var(--t2);
 	}
 	.navlink:hover {
 		color: var(--color-rose);
+	}
+	.hero {
+		display: grid;
+		align-items: center;
+		gap: 56px;
+		padding-top: 56px;
+		padding-bottom: 80px;
+	}
+	@media (min-width: 960px) {
+		.hero {
+			grid-template-columns: 1.05fr 0.95fr;
+			gap: 72px;
+			padding-top: 96px;
+			padding-bottom: 112px;
+		}
+	}
+	.paper-back {
+		position: absolute;
+		inset: 16px -12px -16px 12px;
+		border: 1px solid var(--color-line);
+		border-radius: var(--radius-xs);
+		background: var(--color-beige);
+	}
+	.glow {
+		position: absolute;
+		inset: -30% -10% auto auto;
+		width: 720px;
+		height: 720px;
+		border-radius: 50%;
+		background: radial-gradient(circle, color-mix(in srgb, var(--color-dusty) 30%, transparent), transparent 68%);
+		filter: blur(30px);
+		pointer-events: none;
 	}
 	.fade {
 		animation: pageIn var(--t4) var(--ease-out) both;
@@ -259,93 +313,141 @@
 	a:hover .arr {
 		transform: translateX(3px);
 	}
-	.cat-arrow {
+	.sec-title {
+		margin: 0;
+		font: 300 clamp(30px, 3.6vw, 46px) / 1.12 var(--font-serif);
+		letter-spacing: -0.02em;
+		color: var(--color-ink);
+		text-wrap: balance;
+	}
+	/* Dark editorial band (Purpose, CTA): stays deep brown in both themes. */
+	.band,
+	.cta {
+		--band-text: #e2d6ca;
+		background: #3b2d27;
+		color: #f7f2ea;
+	}
+	.feature {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		padding: 28px 24px 24px;
+		background: var(--color-card);
+		border: 1px solid var(--color-line);
+		border-radius: var(--radius-xs);
 		transition:
 			transform var(--t3) var(--ease-out),
-			color var(--t3) var(--ease-out);
+			box-shadow var(--t3) var(--ease-out),
+			border-color var(--t3) var(--ease-out);
 	}
-	.cat:hover .cat-arrow {
-		transform: translateX(4px);
-		color: var(--color-rose);
+	.feature:hover {
+		transform: translateY(-3px);
+		border-color: var(--color-dusty);
+		box-shadow: var(--shadow-raised);
 	}
-	.card-q {
-		position: relative;
-	}
-	.card-q::after {
-		content: '';
-		position: absolute;
-		left: 32px;
-		right: 32px;
-		bottom: -1px;
-		height: 1px;
-		background: #a45a5e;
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform var(--t4) var(--ease-out);
-	}
-	.card-q:hover::after {
-		transform: scaleX(1);
-	}
-	/* How-it-works dividers on wide screens */
-	@media (min-width: 960px) {
-		.step {
-			padding-left: 40px;
-			padding-right: 40px;
-			border-right: 1px solid var(--color-line);
-		}
-		.step:first-child {
-			padding-left: 0;
-		}
-		.step:last-child {
-			padding-right: 0;
-			border-right: 0;
-		}
-	}
-	/* Hero: slow drifting light + paper grain, purely decorative */
-	.drift {
-		position: absolute;
+	.ficon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 46px;
+		height: 46px;
 		border-radius: 50%;
-		filter: blur(40px);
-		pointer-events: none;
-		will-change: transform;
+		background: var(--color-rose-tint);
+		color: var(--color-rose);
+		transition: background-color var(--t3) var(--ease-out), color var(--t3) var(--ease-out);
 	}
-	.drift-a {
-		width: 560px;
-		height: 560px;
-		left: -140px;
-		top: -180px;
-		background: radial-gradient(circle, rgba(217, 179, 174, 0.3), rgba(217, 179, 174, 0) 68%);
-		animation: driftA 42s var(--ease-io) infinite alternate;
+	.feature:hover .ficon {
+		background: var(--color-espresso);
+		color: var(--color-cream);
 	}
-	.drift-b {
-		width: 680px;
-		height: 680px;
-		right: -200px;
-		bottom: -300px;
-		background: radial-gradient(circle, rgba(203, 184, 160, 0.32), rgba(203, 184, 160, 0) 68%);
-		animation: driftB 36s var(--ease-io) infinite alternate;
+	.ftag {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		align-self: flex-start;
+		padding: 4px 10px;
+		border-radius: 999px;
+		background: var(--color-beige);
+		color: var(--color-body);
+		font-size: 12px;
+		font-weight: 500;
 	}
-	@keyframes driftA {
-		to {
-			transform: translate(110px, 70px) scale(1.08);
+	.num {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 50%;
+		border: 1px solid var(--color-dusty);
+		color: var(--color-rose);
+		font: italic 400 18px/1 var(--font-serif);
+	}
+	.promise {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 22px;
+		background: var(--color-card);
+		border: 1px solid var(--color-line);
+		border-radius: var(--radius-xs);
+	}
+	.picon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 38px;
+		height: 38px;
+		margin-bottom: 4px;
+		border-radius: 50%;
+		background: var(--color-espresso);
+		color: var(--color-cream);
+	}
+	.cta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 24px;
+		padding: 64px 24px;
+		border-radius: var(--radius-float);
+		text-align: center;
+	}
+	@media (min-width: 640px) {
+		.cta {
+			padding: 88px 48px;
 		}
 	}
-	@keyframes driftB {
-		to {
-			transform: translate(-90px, -60px) scale(1.05);
-		}
+	.cta-btn {
+		background: #f7f2ea;
+		color: #3b2d27;
 	}
-	.grain {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		opacity: 0.5;
-		background-image: radial-gradient(rgba(63, 50, 43, 0.05) 1px, transparent 1px);
-		background-size: 3px 3px;
+	.cta-btn:hover {
+		background: #eae0d3;
+		color: #3b2d27;
+	}
+	.cta-ghost {
+		border-color: rgb(247 242 234 / 0.35);
+		color: #f7f2ea;
+	}
+	.cta-ghost:hover {
+		border-color: #c9a89b;
+		color: #f7f2ea;
+	}
+	.cta-btn:focus-visible,
+	.cta-ghost:focus-visible {
+		outline: 2px solid #c9a89b;
+		outline-offset: 2px;
+	}
+	.fhead {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-subtle);
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.drift {
-			animation: none !important;
+		.feature:hover {
+			transform: none;
 		}
 	}
 </style>
