@@ -1,0 +1,391 @@
+@import 'tailwindcss';
+
+/*
+ * Between the Lines — design tokens, taken from the Claude Design canvas.
+ * Warm paper grounds, ink text, one rose accent. 2px radii, 1px warm borders.
+ */
+@theme {
+	--font-serif: 'Newsreader', Georgia, serif;
+	--font-sans: 'Instrument Sans', system-ui, sans-serif;
+
+	/* Grounds */
+	--color-paper: #f7f2ea; /* app background */
+	--color-sheet: #fdfbf7; /* cards, reading page */
+	--color-card: #fbf8f3;
+	--color-sand: #f1eadf; /* sidebar */
+	--color-sand-2: #f7f0e6; /* soft panels */
+	--color-skel: #efe7db;
+
+	/* Lines */
+	--color-line: #e4dacd;
+	--color-line-soft: #ece3d7;
+	--color-line-strong: #dccfc0;
+	--color-line-hover: #cfc2b1;
+
+	/* Ink */
+	--color-ink: #231d1a;
+	--color-ink-2: #2b2522;
+	--color-ink-3: #3a302b;
+	--color-espresso: #3f322b; /* primary buttons */
+	--color-body: #4a3f38;
+	--color-muted: #5e534c;
+	--color-subtle: #6f625a;
+	--color-faint: #b9a999;
+	--color-cream: #fbf8f3; /* text on dark */
+	--color-cream-2: #f3ece2;
+
+	/* Accent */
+	--color-rose: #8e4a4f;
+	--color-rose-dark: #6e363b;
+	--color-rose-soft: #d9b3ae;
+	--color-rose-tint: #f1e1de;
+	--color-danger: #8e3a40;
+
+	--radius-xs: 2px;
+
+	--ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/*
+ * Dark theme — the same warm paper palette, read by lamplight.
+ * Overrides the token variables, so every bg-*/text-*/border-* utility follows.
+ */
+@layer base {
+	:root[data-theme='dark'] {
+		color-scheme: dark;
+		--color-paper: #1d1916;
+		--color-sheet: #231e1b;
+		--color-card: #26211d;
+		--color-sand: #191513;
+		--color-sand-2: #2a2420;
+		--color-skel: #2e2824;
+		--color-line: #3a322c;
+		--color-line-soft: #332c27;
+		--color-line-strong: #463d36;
+		--color-line-hover: #574c43;
+		--color-ink: #f3ece2;
+		--color-ink-2: #ece4d9;
+		--color-ink-3: #ddd2c5;
+		--color-espresso: #4a3d35;
+		--color-body: #cdbfb0;
+		--color-muted: #bcae9f;
+		--color-subtle: #a89a8c;
+		--color-faint: #6f625a;
+		--color-cream: #fbf8f3;
+		--color-cream-2: #f3ece2;
+		--color-rose: #d9a3a3;
+		--color-rose-dark: #e8c0bd;
+		--color-rose-soft: #8e4a4f;
+		--color-rose-tint: #3a2627;
+		--color-danger: #e39a9f;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root[data-theme='system'] {
+			color-scheme: dark;
+			--color-paper: #1d1916;
+			--color-sheet: #231e1b;
+			--color-card: #26211d;
+			--color-sand: #191513;
+			--color-sand-2: #2a2420;
+			--color-skel: #2e2824;
+			--color-line: #3a322c;
+			--color-line-soft: #332c27;
+			--color-line-strong: #463d36;
+			--color-line-hover: #574c43;
+			--color-ink: #f3ece2;
+			--color-ink-2: #ece4d9;
+			--color-ink-3: #ddd2c5;
+			--color-espresso: #4a3d35;
+			--color-body: #cdbfb0;
+			--color-muted: #bcae9f;
+			--color-subtle: #a89a8c;
+			--color-faint: #6f625a;
+			--color-cream: #fbf8f3;
+			--color-cream-2: #f3ece2;
+			--color-rose: #d9a3a3;
+			--color-rose-dark: #e8c0bd;
+			--color-rose-soft: #8e4a4f;
+			--color-rose-tint: #3a2627;
+			--color-danger: #e39a9f;
+		}
+	}
+}
+
+:root {
+	--t1: 160ms;
+	--t2: 240ms;
+	--t3: 420ms;
+	--t4: 720ms;
+}
+
+@layer base {
+	html {
+		-webkit-font-smoothing: antialiased;
+	}
+	body {
+		margin: 0;
+		background: var(--color-paper);
+		color: var(--color-ink-2);
+		font-family: var(--font-sans);
+	}
+	a {
+		color: var(--color-rose);
+		text-decoration: none;
+	}
+	a:hover {
+		color: var(--color-rose-dark);
+	}
+	button {
+		font-family: inherit;
+		cursor: pointer;
+	}
+	:focus-visible {
+		outline: 2px solid var(--color-rose);
+		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 0 20px;
+		border-radius: 2px;
+		border: 1px solid transparent;
+		font: 500 14px/1 var(--font-sans);
+		transition:
+			background-color var(--t2) var(--ease-out),
+			color var(--t2) var(--ease-out),
+			border-color var(--t2) var(--ease-out);
+	}
+	.btn:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+	.btn-lg {
+		min-height: 52px;
+		padding: 0 28px;
+		font-size: 15px;
+	}
+	.btn-primary {
+		background: var(--color-espresso);
+		color: var(--color-cream);
+	}
+	.btn-primary:hover:not(:disabled) {
+		background: var(--color-ink);
+		color: var(--color-cream);
+	}
+	.btn-rose {
+		background: var(--color-rose);
+		color: var(--color-cream);
+	}
+	.btn-rose:hover:not(:disabled) {
+		background: var(--color-rose-dark);
+		color: var(--color-cream);
+	}
+	.btn-ghost {
+		background: transparent;
+		color: var(--color-espresso);
+		border-color: var(--color-line-hover);
+	}
+	.btn-ghost:hover:not(:disabled) {
+		border-color: var(--color-espresso);
+		color: var(--color-ink);
+	}
+	.btn-danger {
+		background: var(--color-danger);
+		color: var(--color-cream);
+	}
+
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		min-height: 38px;
+		padding: 0 16px;
+		border: 1px solid var(--color-line-strong);
+		border-radius: 999px;
+		background: var(--color-card);
+		color: var(--color-body);
+		font: 500 13px/1 var(--font-sans);
+		transition:
+			border-color var(--t2) var(--ease-out),
+			color var(--t2) var(--ease-out),
+			background-color var(--t2) var(--ease-out);
+	}
+	.chip:hover {
+		border-color: #8b7b6b;
+		color: var(--color-ink);
+		background: var(--color-sheet);
+	}
+	.chip[aria-pressed='true'],
+	.chip[aria-current='page'] {
+		background: var(--color-espresso);
+		border-color: var(--color-espresso);
+		color: var(--color-cream);
+	}
+
+	.field {
+		width: 100%;
+		height: 46px;
+		padding: 0 14px;
+		background: var(--color-sheet);
+		border: 1px solid var(--color-line-strong);
+		border-radius: 2px;
+		font: 400 14px var(--font-sans);
+		color: var(--color-ink-2);
+		outline: none;
+		transition:
+			border-color var(--t2) var(--ease-out),
+			box-shadow var(--t2) var(--ease-out);
+	}
+	.field:focus {
+		border-color: var(--color-rose);
+		box-shadow: 0 0 0 3px rgb(142 74 79 / 0.14);
+	}
+	textarea.field {
+		height: auto;
+		padding: 12px 14px;
+	}
+
+	.auth-h1 {
+		margin: 0;
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: 40px;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		color: var(--color-ink);
+	}
+	.auth-sub {
+		margin: 0;
+		font-size: 15px;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+	.auth-label {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--color-body);
+	}
+	.notice-err {
+		margin: 0;
+		padding: 12px 14px;
+		background: #f8ecea;
+		border: 1px solid #e8ccc8;
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--color-danger);
+	}
+
+	.eyebrow {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.card {
+		transition:
+			border-color var(--t3) var(--ease-out),
+			box-shadow var(--t3) var(--ease-out),
+			transform var(--t3) var(--ease-out);
+	}
+	.card:hover {
+		border-color: #d3c3b0;
+		box-shadow: 0 22px 44px -30px rgb(63 50 43 / 0.42);
+		transform: translateY(-2px);
+	}
+
+	.skel {
+		background: linear-gradient(90deg, #efe7db 0%, #f7f1e8 50%, #efe7db 100%);
+		background-size: 200% 100%;
+		animation: shim 1.8s var(--ease-io) infinite;
+		border-radius: 2px;
+	}
+
+	.page-in {
+		animation: pageIn var(--t4) var(--ease-out) both;
+	}
+	.rise {
+		animation: pageIn var(--t4) var(--ease-out) backwards;
+	}
+	.line-in {
+		display: block;
+		animation: lineIn 900ms var(--ease-out) both;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}
+
+@keyframes pageIn {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes lineIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+		filter: blur(2px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+		filter: none;
+	}
+}
+@keyframes shim {
+	from {
+		background-position: 200% 0;
+	}
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 1ms !important;
+		transition-delay: 0ms !important;
+	}
+	.card:hover {
+		transform: none;
+	}
+	.line-in {
+		filter: none;
+	}
+}
+
+/* Dark theme: primary buttons are lifted espresso; hover lightens instead of darkening. */
+:root[data-theme='dark'] .btn-primary:hover:not(:disabled) {
+	background: #5c4c42;
+}
+@media (prefers-color-scheme: dark) {
+	:root[data-theme='system'] .btn-primary:hover:not(:disabled) {
+		background: #5c4c42;
+	}
+}
