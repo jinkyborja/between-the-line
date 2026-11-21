@@ -9,7 +9,14 @@ export const variables = defineEnvVars({
 	PUBLIC_SUPABASE_URL: {
 		public: true,
 		static: true,
-		schema: required('PUBLIC_SUPABASE_URL'),
+		schema: (v: string | undefined) => {
+			const url = required('PUBLIC_SUPABASE_URL')(v);
+			if (!/^https?:\/\/\S+$/.test(url))
+				throw new Error(
+					'PUBLIC_SUPABASE_URL must be your project URL, e.g. https://<project-ref>.supabase.co (Supabase → Project Settings → API). It looks like a key was pasted instead.'
+				);
+			return url;
+		},
 		description: 'Supabase project URL (safe for the browser).'
 	},
 	PUBLIC_SUPABASE_ANON_KEY: {

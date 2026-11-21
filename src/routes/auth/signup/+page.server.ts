@@ -32,8 +32,23 @@ export const actions: Actions = {
 		});
 
 		if (error) {
+			// Server log only (never sent to the browser): the real reason, for debugging.
+			console.error('[signup] Supabase error:', error.status, error.code, error.message);
+			const known: Record<string, string> = {
+				over_email_send_rate_limit:
+					'Too many sign-up emails were sent in a short time. Please wait a few minutes and try again.',
+				email_address_invalid: 'That email address can’t be used. Please try another one.',
+				signup_disabled: 'New sign-ups are turned off right now.',
+				email_provider_disabled: 'Email sign-up is turned off right now.',
+				weak_password: error.message,
+				unexpected_failure: 'Something went wrong setting up your journal. Please try again in a moment.'
+			};
 			if (/password/i.test(error.message)) return fail(400, { name, email, message: error.message });
-			return fail(400, { name, email, message: 'We couldn’t create your account just now. Please try again.' });
+			return fail(400, {
+				name,
+				email,
+				message: (error.code && known[error.code]) || 'We couldn’t create your account just now. Please try again.'
+			});
 		}
 
 		// Email confirmation off → signed in immediately.
