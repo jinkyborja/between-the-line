@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import SearchField from '#lib/components/SearchField.svelte';
 	import Toast from '#lib/components/Toast.svelte';
 	import { createToast } from '#lib/toast.svelte.ts';
@@ -10,10 +12,8 @@
 
 	let { data }: PageProps = $props();
 
-	let entries = $state<JournalEntry[]>([]);
-	$effect.pre(() => {
-		entries = data.entries;
-	});
+	// Writable derived: server-rendered, locally editable, resets on new data.
+	let entries = $derived<JournalEntry[]>(data.entries);
 
 	let tab = $state<'all' | 'saved' | 'draft'>('all');
 	let query = $state('');
@@ -32,9 +32,9 @@
 
 	// Filter options come from your own entries.
 	const months = $derived([...new Set(entries.map((e) => monthKey(e.created_at)))]);
-	const categories = $derived(
-		[...new Map(entries.filter((e) => e.poem?.category).map((e) => [e.poem!.category!.slug, e.poem!.category!.name])).entries()]
-	);
+	const categories = $derived([
+		...new Map(entries.filter((e) => e.poem?.category).map((e) => [e.poem!.category!.slug, e.poem!.category!.name])).entries()
+	]);
 	const allTags = $derived([...new Set(entries.flatMap((e) => e.tags))].sort());
 
 	const filtered = $derived.by(() => {
@@ -58,7 +58,12 @@
 		}
 		return [...g.entries()];
 	});
-	const anyFilter = $derived(!!(query || category || month || mood || tag || tab !== 'all'));
+	const activeFilters = $derived([category, month, mood, tag, query.trim()].filter(Boolean).length);
+	const counts = $derived({
+		all: entries.length,
+		saved: entries.filter((e) => e.status === 'saved').length,
+		draft: entries.filter((e) => e.status === 'draft').length
+	});
 
 	// Private statistics
 	const stats = $derived.by(() => {
@@ -67,14 +72,12 @@
 		entries.forEach((e) => e.moods.forEach((m) => moodCount.set(m, (moodCount.get(m) ?? 0) + 1)));
 		const topMood = [...moodCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 		const now = new Date();
-		const daysInMonth = now.getDate();
 		const thisMonth = now.toISOString().slice(0, 7);
 		const wrote = new Set(entries.filter((e) => monthKey(e.created_at) === thisMonth).map((e) => new Date(e.created_at).getDate()));
 		return {
-			count: entries.length,
 			words: wordsTotal,
 			topMood,
-			days: Array.from({ length: daysInMonth }, (_, i) => wrote.has(i + 1)),
+			days: Array.from({ length: now.getDate() }, (_, i) => wrote.has(i + 1)),
 			daysWritten: wrote.size,
 			monthName: now.toLocaleDateString('en-GB', { month: 'long' })
 		};
@@ -98,182 +101,249 @@
 	}
 
 	const fmtDay = (iso: string) => new Date(iso).getDate().toString().padStart(2, '0');
-	const fmtMeta = (iso: string) => {
-		const d = new Date(iso);
-		return `${d.toLocaleDateString('en-GB', { month: 'short' })} · ${d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-	};
+	const fmtWeekday = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short' });
+	const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+	const excerpt = (b: string) => b.trim().replace(/\s+/g, ' ');
 </script>
 
 <svelte:head><title>My Journal — Between the Lines</title></svelte:head>
 
 <div class="flex flex-col gap-9">
-	<header class="flex flex-wrap items-end justify-between gap-5">
-		<div class="flex flex-col gap-3.5">
-			<span class="inline-flex h-[30px] items-center gap-2 self-start rounded-full bg-espresso px-3 text-xs font-medium text-cream"><Icon name="lock" size={14} />Only you can see this page</span>
-			<h1 class="m-0 font-serif text-[42px] font-light tracking-[-0.025em] text-ink sm:text-[52px]">My Journal</h1>
-		</div>
-		<a class="btn btn-primary" href="/write"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>New entry</a>
-	</header>
+	<PageHeader title="My Journal" privacy="Only you can see this page" lede="Every entry here is yours alone — never shared, never shown to moderators.">
+		{#snippet actions()}
+			<a class="btn btn-primary" href="/write"><Icon name="pen" size={17} />New entry</a>
+		{/snippet}
+	</PageHeader>
 
-	{#if entries.length}
+	{#if data.error}
+		<p role="alert" class="notice-err">{data.error}</p>
+	{:else if !entries.length}
+		<EmptyState title="Your journal is waiting." text="Some feelings are difficult to explain. Here, you don’t have to. Just write.">
+			<a class="btn btn-primary" href="/write">Write the first line</a>
+			<a class="btn btn-ghost" href="/library">Find a poem to begin with</a>
+		</EmptyState>
+	{:else}
 		<!-- Private statistics -->
-		<section aria-label="Your writing, privately" class="stats grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] border border-line bg-card">
-			<div class="flex flex-col gap-1.5 p-6"><span class="font-serif text-[40px] font-light text-ink">{stats.count}</span><span class="text-[13px] text-muted">{stats.count === 1 ? 'reflection' : 'reflections'} written</span></div>
-			<div class="flex flex-col gap-1.5 p-6"><span class="font-serif text-[40px] font-light text-ink">{stats.words.toLocaleString('en-GB')}</span><span class="text-[13px] text-muted">words, all yours</span></div>
-			<div class="flex flex-col gap-1.5 p-6"><span class="font-serif text-[40px] font-light text-ink italic">{stats.topMood ? cap(stats.topMood) : '—'}</span><span class="text-[13px] text-muted">your most frequent feeling</span></div>
-			<div class="flex flex-col gap-2.5 p-6">
-				<span class="text-[13px] text-muted">Days written in {stats.monthName}</span>
-				<div role="img" aria-label="{stats.daysWritten} of {stats.days.length} days" class="grid grid-cols-10 gap-1">
-					{#each stats.days as on, i (i)}<span class="h-3.5 rounded-xs" style="background: {on ? '#8E4A4F' : '#E7DED2'}"></span>{/each}
+		<section aria-label="Your writing, privately" class="stats surface">
+			<div class="stat"><span class="num">{entries.length}</span><span class="lbl">{entries.length === 1 ? 'entry' : 'entries'}</span></div>
+			<div class="stat"><span class="num">{stats.words.toLocaleString('en-GB')}</span><span class="lbl">words, all yours</span></div>
+			<div class="stat"><span class="num italic">{stats.topMood ? cap(stats.topMood) : '—'}</span><span class="lbl">most frequent feeling</span></div>
+			<div class="stat">
+				<span class="lbl">{stats.daysWritten} {stats.daysWritten === 1 ? 'day' : 'days'} written in {stats.monthName}</span>
+				<div role="img" aria-label="{stats.daysWritten} of {stats.days.length} days this month" class="cal">
+					{#each stats.days as on, i (i)}<span class:on></span>{/each}
 				</div>
 			</div>
 		</section>
 
-		<!-- Tabs + filters -->
-		<section class="flex flex-col gap-4">
-			<div role="tablist" aria-label="Entry status" class="flex gap-7 border-b border-line">
-				{#each [['all', 'All', entries.length], ['saved', 'Saved', entries.filter((e) => e.status === 'saved').length], ['draft', 'Drafts', entries.filter((e) => e.status === 'draft').length]] as [k, label, n] (k)}
-					<button role="tab" class="tab" aria-selected={tab === k} onclick={() => (tab = k as typeof tab)}>{label} <span class="font-normal text-subtle">{n}</span></button>
+		<!-- Search first, then status, then refinements -->
+		<section class="flex flex-col gap-4" aria-label="Find entries">
+			<SearchField bind:value={query} label="Search entries" placeholder="Search titles, words, poems or tags" />
+			<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+				<div role="tablist" aria-label="Entry status" class="tabs flex-none">
+					{#each [['all', 'All'], ['saved', 'Saved'], ['draft', 'Drafts']] as [k, label] (k)}
+						<button role="tab" class="tab" aria-selected={tab === k} onclick={() => (tab = k as typeof tab)}>
+							{label} <span class="font-normal text-subtle">{counts[k as keyof typeof counts]}</span>
+						</button>
+					{/each}
+				</div>
+				<div class="flex flex-wrap items-center gap-2 pb-1">
+					<select class="field field-select h-10! text-[13px]!" bind:value={month} aria-label="Month">
+						<option value="">Any month</option>
+						{#each months as m (m)}<option value={m}>{monthLabel(m)}</option>{/each}
+					</select>
+					<select class="field field-select h-10! text-[13px]!" bind:value={mood} aria-label="Feeling">
+						<option value="">Any feeling</option>
+						{#each MOODS as m (m)}<option value={m}>{cap(m)}</option>{/each}
+					</select>
+					{#if categories.length}
+						<select class="field field-select h-10! text-[13px]!" bind:value={category} aria-label="Category">
+							<option value="">Any category</option>
+							{#each categories as [slug, name] (slug)}<option value={slug}>{name}</option>{/each}
+						</select>
+					{/if}
+					{#if allTags.length}
+						<select class="field field-select h-10! text-[13px]!" bind:value={tag} aria-label="Tag">
+							<option value="">Any tag</option>
+							{#each allTags as t (t)}<option value={t}>#{t}</option>{/each}
+						</select>
+					{/if}
+				</div>
+			</div>
+			{#if activeFilters || tab !== 'all'}
+				<p class="m-0 flex flex-wrap items-center gap-3 text-[13px] text-subtle" aria-live="polite">
+					Showing {filtered.length} of {entries.length}
+					<button class="btn btn-quiet btn-sm min-h-8! px-2!" onclick={reset}>Clear filters</button>
+				</p>
+			{/if}
+		</section>
+
+		<!-- Entries, grouped by month -->
+		<section class="flex flex-col gap-3" aria-label="Entries">
+			{#if !filtered.length}
+				<EmptyState title="Nothing here matches." text="Your words are still safe — try another search, or a different month.">
+					<button class="btn btn-ghost" onclick={reset}>Show all entries</button>
+				</EmptyState>
+			{:else}
+				{#each grouped as [key, list] (key)}
+					<h2 class="month">{monthLabel(key)} <span>{list.length}</span></h2>
+					{#each list as e, i (e.id)}
+						<article class="entry surface rise" style="animation-delay: {Math.min(i, 6) * 50}ms">
+							<div class="date" aria-hidden="true">
+								<span class="d">{fmtDay(e.created_at)}</span>
+								<span class="w">{fmtWeekday(e.created_at)}</span>
+							</div>
+							<div class="flex min-w-0 flex-col gap-1.5">
+								<h3 class="m-0 font-serif text-[21px] leading-snug font-normal sm:text-[23px]">
+									<a href="/write?id={e.id}" class="stretched text-ink hover:text-rose-dark">{e.title || 'Untitled entry'}</a>
+								</h3>
+								<p class="m-0 line-clamp-2 font-serif text-base leading-[1.6] text-body">{excerpt(e.body) || '…'}</p>
+								<div class="meta">
+									<span class="sr-only">Written</span><time datetime={e.created_at}>{fmtTime(e.created_at)}</time>
+									{#if e.status === 'draft'}<span class="badge badge-draft">Draft</span>{/if}
+									{#if e.poem}<span>on <a href="/read/{e.poem.slug}" class="relative z-1 font-serif italic">{e.poem.title}</a></span>{/if}
+									{#each e.moods as m (m)}<span class="badge">{cap(m)}</span>{/each}
+									{#each e.tags as t (t)}<button class="badge relative z-1 border-0 hover:bg-line" onclick={() => (tag = t)} aria-label="Filter by tag {t}">#{t}</button>{/each}
+								</div>
+							</div>
+							<div class="acts">
+								<a class="icon-btn" href="/write?id={e.id}" aria-label="Edit {e.title || 'entry'}"><Icon name="pen" size={17} /></a>
+								<button class="icon-btn" aria-label="Delete {e.title || 'entry'}" onclick={() => (confirm = e)}><Icon name="trash" size={17} /></button>
+							</div>
+						</article>
+					{/each}
 				{/each}
-			</div>
-			<div class="flex flex-wrap gap-2.5">
-				<div class="flex-[1_1_260px]"><SearchField bind:value={query} label="Search entries" placeholder="Search your entries" /></div>
-				<select class="field sel" bind:value={month} aria-label="Month">
-					<option value="">All time</option>
-					{#each months as m (m)}<option value={m}>{monthLabel(m)}</option>{/each}
-				</select>
-				{#if categories.length}
-					<select class="field sel" bind:value={category} aria-label="Category">
-						<option value="">All categories</option>
-						{#each categories as [slug, name] (slug)}<option value={slug}>{name}</option>{/each}
-					</select>
-				{/if}
-				<select class="field sel" bind:value={mood} aria-label="Feeling">
-					<option value="">Any feeling</option>
-					{#each MOODS as m (m)}<option value={m}>{cap(m)}</option>{/each}
-				</select>
-				{#if allTags.length}
-					<select class="field sel" bind:value={tag} aria-label="Tag">
-						<option value="">Any tag</option>
-						{#each allTags as t (t)}<option value={t}>#{t}</option>{/each}
-					</select>
-				{/if}
-			</div>
+			{/if}
 		</section>
 	{/if}
-
-	<!-- Entries, grouped by month -->
-	<section class="flex flex-col gap-3.5" aria-live="polite">
-		{#if data.error}
-			<p role="alert" class="notice-err">{data.error}</p>
-		{:else if !entries.length}
-			<div class="rise flex flex-col items-center gap-3 border border-line bg-card px-8 py-16 text-center sm:px-14">
-				<svg width="120" height="40" viewBox="0 0 120 40" fill="none" stroke="#B9A999" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><path class="ink" d="M4 28c14-14 24 6 36-4s18-16 28-4 20 10 30 0 12-8 18-6" /></svg>
-				<h3 class="m-0 font-serif text-2xl font-normal text-ink">Your journal is waiting.</h3>
-				<p class="m-0 max-w-[340px] text-sm leading-relaxed text-muted">Some feelings are difficult to explain. Here, you don’t have to. Just write.</p>
-				<a class="btn btn-primary mt-2" href="/write">Write the first line</a>
-			</div>
-		{:else if !filtered.length}
-			<div class="rise flex flex-col items-center gap-3 border border-line bg-card px-8 py-16 text-center sm:px-14">
-				<h3 class="m-0 font-serif text-2xl font-normal text-ink">Nothing here matches.</h3>
-				<p class="m-0 max-w-[320px] text-sm leading-relaxed text-muted">Your words are still safe — try another search, or a different month.</p>
-				<button class="btn btn-ghost" onclick={reset}>Show all entries</button>
-			</div>
-		{:else}
-			{#each grouped as [key, list] (key)}
-				<h2 class="m-0 mt-3 font-serif text-xl font-normal text-subtle italic first:mt-0">{monthLabel(key)}</h2>
-				{#each list as e, i (e.id)}
-					<article class="entry rise grid grid-cols-[56px_minmax(0,1fr)] items-start gap-4 border border-line bg-sheet p-5 sm:grid-cols-[88px_minmax(0,1fr)_auto] sm:gap-7 sm:px-8 sm:py-7" style="animation-delay: {Math.min(i, 6) * 60}ms">
-						<div class="flex flex-col gap-0.5 pt-1"><span class="font-serif text-[32px] leading-none font-light text-ink sm:text-[40px]">{fmtDay(e.created_at)}</span><span class="text-xs text-subtle">{fmtMeta(e.created_at)}</span></div>
-						<div class="flex min-w-0 flex-col gap-2.5">
-							<div class="flex flex-wrap items-center gap-2.5">
-								{#if e.status === 'draft'}<span class="badge border border-dashed border-faint text-body">Draft</span>
-								{:else}<span class="badge bg-espresso text-cream">Private</span>{/if}
-								{#if e.poem}<span class="text-xs text-subtle">On <a href="/read/{e.poem.slug}" class="font-serif text-sm italic">{e.poem.title}</a></span>{/if}
-							</div>
-							<h3 class="m-0 font-serif text-[22px] font-normal text-ink sm:text-[25px]"><a href="/write?id={e.id}" class="text-ink hover:text-rose-dark">{e.title || 'Untitled'}</a></h3>
-							<p class="m-0 line-clamp-2 font-serif text-[17px] leading-[1.6] text-body">{e.body || '…'}</p>
-							{#if e.moods.length || e.tags.length}
-								<div class="flex flex-wrap gap-1.5 pt-1">
-									{#each e.moods as m (m)}<span class="pill">{cap(m)}</span>{/each}
-									{#each e.tags as t (t)}<button class="pill border-0 hover:bg-line" onclick={() => (tag = t)}>#{t}</button>{/each}
-								</div>
-							{/if}
-						</div>
-						<div class="acts col-span-2 flex justify-end gap-0.5 sm:col-span-1">
-							<a class="ib" href="/write?id={e.id}" aria-label="Edit {e.title || 'entry'}"><Icon name="pen" size={18} /></a>
-							<button class="ib" aria-label="Delete {e.title || 'entry'}" onclick={() => (confirm = e)}><Icon name="trash" size={18} /></button>
-						</div>
-					</article>
-				{/each}
-			{/each}
-		{/if}
-	</section>
 </div>
 
 <ConfirmDialog open={!!confirm} title="Let this entry go?" confirmLabel="Delete entry" cancelLabel="Keep it" danger busy={deleting} onconfirm={doDelete} oncancel={() => (confirm = null)}>
-	“{confirm?.title || 'Untitled'}” will be deleted for good. This can’t be undone.
+	“{confirm?.title || 'Untitled entry'}” will be deleted for good. This can’t be undone.
 </ConfirmDialog>
 
 <Toast open={toast.open} text={toast.text} icon={false} />
 
 <style>
-	.stats > div + div {
+	.stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+	}
+	.stat {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		padding: 18px 22px;
+	}
+	.stat + .stat {
 		border-left: 1px solid var(--color-line-soft);
 	}
-	.tab {
-		min-height: 44px;
-		margin-bottom: -1px;
-		padding: 0;
-		border: 0;
-		border-bottom: 2px solid transparent;
-		background: none;
-		color: var(--color-muted);
-		font: 500 14px var(--font-sans);
-		transition: color var(--t2) var(--ease-out), border-color var(--t2) var(--ease-out);
-	}
-	.tab[aria-selected='true'] {
+	.num {
+		font: 300 32px/1.1 var(--font-serif);
 		color: var(--color-ink);
-		border-bottom-color: var(--color-rose);
 	}
-	.sel {
-		width: auto;
-		flex: 0 1 auto;
-		padding-right: 32px;
-		appearance: none;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236F625A' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-		background-repeat: no-repeat;
-		background-position: right 12px center;
+	.lbl {
+		font-size: 13px;
+		color: var(--color-muted);
 	}
-	.badge {
-		display: inline-flex;
-		align-items: center;
-		height: 24px;
-		padding: 0 10px;
-		border-radius: 999px;
-		font-size: 11px;
-		font-weight: 500;
+	.cal {
+		display: grid;
+		grid-template-columns: repeat(10, minmax(0, 1fr));
+		gap: 3px;
+		margin-top: 6px;
 	}
-	.pill {
-		display: inline-flex;
-		align-items: center;
-		height: 26px;
-		padding: 0 10px;
-		border-radius: 999px;
-		background: var(--color-skel);
-		font-size: 12px;
-		color: var(--color-body);
+	.cal span {
+		height: 10px;
+		border-radius: 2px;
+		background: var(--color-line);
+	}
+	.cal span.on {
+		background: var(--color-dusty);
+	}
+	.month {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		margin: 18px 0 2px;
+		font: italic 400 19px var(--font-serif);
+		color: var(--color-subtle);
+	}
+	.month:first-child {
+		margin-top: 0;
+	}
+	.month span {
+		font: 500 12px var(--font-sans);
+		color: var(--color-faint);
 	}
 	.entry {
-		transition: border-color var(--t3) var(--ease-out), box-shadow var(--t3) var(--ease-out);
+		position: relative;
+		display: grid;
+		grid-template-columns: 48px minmax(0, 1fr);
+		gap: 6px 16px;
+		align-items: start;
+		padding: 18px 16px;
+		transition:
+			border-color var(--t3) var(--ease-out),
+			box-shadow var(--t3) var(--ease-out);
+	}
+	@media (min-width: 640px) {
+		.entry {
+			grid-template-columns: 64px minmax(0, 1fr) auto;
+			gap: 20px;
+			padding: 22px 24px;
+		}
 	}
 	.entry:hover {
 		border-color: var(--color-line-hover);
-		box-shadow: 0 18px 40px -28px rgb(63 50 43 / 0.4);
+		box-shadow: var(--shadow-raised);
+	}
+	.date {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: 2px;
+		line-height: 1;
+	}
+	.date .d {
+		font: 300 30px var(--font-serif);
+		color: var(--color-ink);
+	}
+	.date .w {
+		margin-top: 4px;
+		font: 600 10px var(--font-sans);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-subtle);
+	}
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 10px;
+		padding-top: 4px;
+		font-size: 12px;
+		color: var(--color-subtle);
+	}
+	.stretched::after {
+		content: '';
+		position: absolute;
+		inset: 0;
 	}
 	.acts {
-		opacity: 0.55;
+		position: relative;
+		z-index: 1;
+		grid-column: 1 / -1;
+		display: flex;
+		justify-content: flex-end;
+		gap: 2px;
+		opacity: 0.6;
 		transition: opacity var(--t2) var(--ease-out);
+	}
+	@media (min-width: 640px) {
+		.acts {
+			grid-column: auto;
+		}
 	}
 	.entry:hover .acts,
 	.entry:focus-within .acts {
@@ -282,31 +352,6 @@
 	@media (hover: none) {
 		.acts {
 			opacity: 1;
-		}
-	}
-	.ib {
-		width: 44px;
-		height: 44px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid transparent;
-		border-radius: 2px;
-		background: transparent;
-		color: var(--color-body);
-		transition: color var(--t2) var(--ease-out), border-color var(--t2) var(--ease-out);
-	}
-	.ib:hover {
-		border-color: var(--color-line-strong);
-		color: var(--color-ink);
-	}
-	.ink {
-		stroke-dasharray: 160;
-		animation: draw 1.6s var(--ease-out) both;
-	}
-	@keyframes draw {
-		from {
-			stroke-dashoffset: 160;
 		}
 	}
 </style>

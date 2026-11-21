@@ -28,16 +28,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.from('poems')
 			.select('slug, title')
 			.eq('category_id', poem.category_id)
-			.lt('created_at', poem.created_at)
-			.order('created_at', { ascending: false })
+			.lt('title', poem.title)
+			.order('title', { ascending: false })
 			.limit(1)
 			.maybeSingle<{ slug: string; title: string }>(),
 		sb
 			.from('poems')
 			.select('slug, title')
 			.eq('category_id', poem.category_id)
-			.gt('created_at', poem.created_at)
-			.order('created_at')
+			.gt('title', poem.title)
+			.order('title')
 			.limit(1)
 			.maybeSingle<{ slug: string; title: string }>()
 	]);

@@ -20,7 +20,7 @@
 <!-- Mobile bottom nav — matches "Component · Bottom nav". The rose indicator slides between tabs. -->
 <nav
 	aria-label="App"
-	class="vt-bottomnav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t border-line bg-[rgb(251_248_243/0.96)] px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur lg:hidden"
+	class="vt-bottomnav fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-center border-t border-line bg-[rgb(251_248_243/0.96)] px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur md:hidden"
 >
 	<span
 		aria-hidden="true"
@@ -33,7 +33,7 @@
 			<a
 				href={tab.href}
 				aria-current={on ? 'page' : undefined}
-				class="tab flex min-h-[52px] flex-col items-center justify-center gap-1 text-[11px] tracking-[0.01em] transition-colors duration-[240ms] {on
+				class="mtab flex min-h-[52px] flex-col items-center justify-center gap-1 text-[11px] tracking-[0.01em] transition-colors duration-[240ms] {on
 					? 'font-semibold text-rose'
 					: 'font-medium text-muted'}"
 				class:on
@@ -64,20 +64,20 @@
 		display: inline-flex;
 		transition: transform var(--t3) var(--ease-out);
 	}
-	.tab.on .ico {
+	.mtab.on .ico {
 		transform: translateY(-2px);
 	}
-	.tab {
+	.mtab {
 		-webkit-tap-highlight-color: transparent;
 		transition:
 			color var(--t2) var(--ease-out),
 			opacity var(--t1) var(--ease-out);
 	}
-	.tab:active {
+	.mtab:active {
 		opacity: 0.7;
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.tab.on .ico {
+		.mtab.on .ico {
 			transform: none;
 		}
 	}

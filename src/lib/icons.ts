@@ -21,6 +21,8 @@ export const icons = {
 	bell: 'M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0',
 	trash: 'M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13',
 	close: 'M6 6l12 12M18 6 6 18',
+	share: 'M12 15V3M8 7l4-4 4 4M5 12v8h14v-8',
+	menu: 'M4 7h16M4 12h16M4 17h10',
 	envelope: 'M3.5 6.5h17v11h-17zM3.5 6.5l8.5 7 8.5-7',
 	archive: 'M4 5h16v4H4zM5.5 9v10h13V9M10 13h4',
 	logout: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10'

@@ -3,6 +3,8 @@
 	import { navigating, page } from '$app/state';
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import Toast from '#lib/components/Toast.svelte';
 	import { GUIDELINES, REPORT_REASONS, friendlyError } from '#lib/community.ts';
 	import { createToast } from '#lib/toast.svelte.ts';
@@ -86,30 +88,26 @@
 
 <div class="flex flex-wrap items-start gap-12">
 	<div class="flex min-w-0 flex-[999_1_520px] flex-col gap-7">
-		<header class="flex flex-wrap items-end justify-between gap-5">
-			<div class="flex flex-col gap-3">
-				<h1 class="m-0 font-serif text-[42px] font-light tracking-[-0.025em] text-ink sm:text-[52px]">Community</h1>
-				<p class="m-0 max-w-[520px] text-base leading-relaxed text-muted">
-					Reflections people chose to share, anonymously. Read slowly; respond kindly. There are no names or follower counts here, only people.
-				</p>
-			</div>
-			<a class="btn btn-primary" href="/community/new">Share anonymously</a>
-		</header>
+		<PageHeader title="Community" lede="Reflections people chose to share, anonymously. Read slowly; respond kindly. There are no names or follower counts here — only people.">
+			{#snippet actions()}
+				<a class="btn btn-primary" href="/community/new"><Icon name="pen" size={16} />Share anonymously</a>
+			{/snippet}
+		</PageHeader>
 
-		<div class="flex flex-col gap-3.5">
-			<div role="tablist" aria-label="Sort" class="flex gap-7 border-b border-line">
+		<div class="flex flex-col gap-4">
+			<div role="tablist" aria-label="Sort" class="tabs">
 				{#each [['recent', 'Recent'], ['felt', 'Most felt'], ['mine', 'Your posts']] as [k, label] (k)}
 					<button role="tab" class="tab" aria-selected={data.filters.sort === k} onclick={() => setParam({ sort: k === 'recent' ? '' : k, more: '' })}>{label}</button>
 				{/each}
 			</div>
-			<div role="group" aria-label="Filter by category" class="flex flex-wrap gap-2">
+			<div role="group" aria-label="Filter by feeling" class="chips">
 				<button class="chip" aria-pressed={!data.filters.category} onclick={() => setParam({ category: '', more: '' })}>All</button>
 				{#each data.categories as c (c.id)}
 					<button class="chip" aria-pressed={data.filters.category === c.slug} onclick={() => setParam({ category: data.filters.category === c.slug ? '' : c.slug, more: '' })}>{c.name}</button>
 				{/each}
 			</div>
 			{#if data.filters.sort === 'mine'}
-				<p class="m-0 text-[13px] text-subtle">Only you can see which posts are yours. To everyone else they’re simply “Anonymous”.</p>
+				<p class="m-0 flex items-center gap-2 text-[13px] text-subtle"><Icon name="lock" size={13} />Only you can see which posts are yours. To everyone else they’re simply “Anonymous”.</p>
 			{/if}
 		</div>
 
@@ -118,7 +116,7 @@
 		{:else if filtering}
 			<div aria-busy="true" aria-label="Loading reflections" class="flex flex-col gap-7">
 				{#each [1, 2, 3] as k (k)}
-					<div class="flex flex-col gap-4 border border-line bg-sheet p-8">
+					<div class="surface flex flex-col gap-4 p-7">
 						<div class="flex items-center gap-3"><div class="skel size-10 rounded-full!"></div><div class="skel h-3 w-32"></div></div>
 						<div class="skel h-4 w-[94%]"></div>
 						<div class="skel h-4 w-[86%]"></div>
@@ -197,20 +195,26 @@
 <Toast open={toast.open} text={toast.text} icon={false} />
 
 <style>
-	.tab {
-		min-height: 44px;
-		margin-bottom: -1px;
-		padding: 0;
-		border: 0;
-		border-bottom: 2px solid transparent;
-		background: none;
-		color: var(--color-muted);
-		font: 500 14px var(--font-sans);
-		transition: color var(--t2) var(--ease-out), border-color var(--t2) var(--ease-out);
+	.chips {
+		display: flex;
+		gap: 8px;
+		overflow-x: auto;
+		margin: 0 -20px;
+		padding: 2px 20px;
+		scrollbar-width: none;
+		mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
 	}
-	.tab[aria-selected='true'] {
-		color: var(--color-ink);
-		border-bottom-color: var(--color-rose);
+	.chips .chip {
+		flex: none;
+	}
+	@media (min-width: 640px) {
+		.chips {
+			flex-wrap: wrap;
+			overflow: visible;
+			margin: 0;
+			padding: 0;
+			mask-image: none;
+		}
 	}
 	.radio {
 		display: flex;

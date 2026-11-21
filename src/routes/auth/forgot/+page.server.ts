@@ -8,9 +8,12 @@ export const actions: Actions = {
 		if (!isEmail(email)) return fail(400, { email, message: 'That email doesn’t look quite right.' });
 
 		// The link returns to /auth/callback, which exchanges the code and opens /auth/reset.
-		await locals.supabase.auth.resetPasswordForEmail(email, {
+		const { error } = await locals.supabase.auth.resetPasswordForEmail(email, {
 			redirectTo: `${url.origin}/auth/callback?next=/auth/reset`
 		});
+		// Server log only — the visitor always sees the same message.
+		if (error) console.error('[forgot] Supabase error:', error.status, error.code, error.message);
+		else console.log('[forgot] reset email accepted by Supabase');
 
 		// Always the same answer, so the form can't be used to discover accounts.
 		return { sent: true, email };

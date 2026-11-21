@@ -22,7 +22,8 @@
 	let remindOn = $state(seed?.remind_on ?? '');
 	const createdAt = seed?.created_at ?? new Date().toISOString();
 
-	let save = $state<'idle' | 'saving' | 'saved' | 'error'>(seed ? 'saved' : 'idle');
+	let save = $state<'idle' | 'dirty' | 'saving' | 'saved' | 'error'>(seed ? 'saved' : 'idle');
+	let savedAt = $state<Date | null>(seed ? new Date(seed.updated_at) : null);
 	let dirty = false;
 	let sealed = $state(false);
 	let focused = $state(false);
@@ -41,7 +42,7 @@
 	function touch() {
 		dirty = true;
 		sealed = false;
-		save = 'saving';
+		save = 'dirty';
 		clearTimeout(timer);
 		timer = setTimeout(flush, 900);
 	}
@@ -56,6 +57,7 @@
 				return;
 			}
 			dirty = false;
+			save = 'saving';
 			const row = {
 				kind,
 				recipient: kind === 'unsent' ? recipient.trim() || null : null,
@@ -80,7 +82,8 @@
 				u.searchParams.delete('kind');
 				replaceState(u, {});
 			}
-			save = dirty ? 'saving' : 'saved';
+			savedAt = new Date();
+			save = dirty ? 'dirty' : 'saved';
 		});
 		return inflight;
 	}
@@ -139,10 +142,22 @@
 	});
 
 	const saveLabel = $derived(
-		save === 'saving' ? 'Saving…' : save === 'error' ? 'Not saved — will retry' : save === 'saved' ? 'Kept privately' : 'Private · saves as you write'
+		save === 'saving' ? 'Saving…' : save === 'dirty' ? 'Unsaved changes' : save === 'error' ? 'Not saved' : save === 'saved' && savedAt ? `Kept privately · ${savedAt.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}` : 'Private · saves as you write'
 	);
+
+	// Ctrl/⌘+S keeps the letter right away.
+	function onKey(e: KeyboardEvent) {
+		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+			e.preventDefault();
+			if (title.trim() || body.trim()) {
+				dirty = true;
+				flush();
+			}
+		}
+	}
 </script>
 
+<svelte:window onkeydown={onKey} />
 <svelte:head><title>{title || meta.label} — Between the Lines</title></svelte:head>
 
 <div class="desk flex min-h-screen flex-col">
@@ -151,9 +166,10 @@
 		<div class="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 px-4 py-2 sm:px-6">
 			<a class="ctl" href="/letters"><Icon name="close" size={18} />Letters</a>
 			<div class="flex items-center gap-5 text-[13px]">
-				<span role="status" aria-live="polite" class="inline-flex items-center gap-2 {save === 'error' ? 'text-danger' : 'text-subtle'}">
-					{#if save === 'saving'}<span class="pulse size-1.5 rounded-full bg-[#8B7B6B]"></span>{:else}<Icon name="lock" size={14} />{/if}
+				<span role="status" aria-live="polite" class="status" data-state={save}>
+					{#if save === 'saving'}<span class="pulse size-1.5 rounded-full bg-mocha"></span>{:else if save === 'dirty'}<span class="size-1.5 rounded-full bg-mocha"></span>{:else}<Icon name="lock" size={14} />{/if}
 					<span class="hidden sm:inline">{saveLabel}</span>
+					{#if save === 'error'}<button class="retry" onclick={() => { dirty = true; flush(); }}>Retry</button>{/if}
 				</span>
 				<span class="text-subtle">{words} {words === 1 ? 'word' : 'words'}</span>
 			</div>
@@ -164,6 +180,7 @@
 	</header>
 
 	<div class="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-8 px-4 pt-8 pb-20 sm:px-6 sm:pt-10">
+		<h1 class="sr-only">{id ? 'Edit letter' : 'New letter'} — {meta.label}</h1>
 		<!-- Who is this letter for? -->
 		<div role="radiogroup" aria-label="Who is this letter for?" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
 			{#each LETTER_KINDS as k (k.kind)}
@@ -173,6 +190,7 @@
 				</button>
 			{/each}
 		</div>
+		<p class="-mt-5 m-0 font-serif text-[15px] text-muted italic" aria-live="polite">{meta.line}</p>
 
 		<div class="flex flex-wrap items-start gap-8">
 			<!-- The letter -->
@@ -266,6 +284,34 @@
 </ConfirmDialog>
 
 <style>
+	.status {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		min-height: 30px;
+		padding: 0 10px;
+		border-radius: 999px;
+		color: var(--color-subtle);
+		white-space: nowrap;
+	}
+	.status[data-state='saved'] {
+		color: #4f6b55;
+	}
+	.status[data-state='error'] {
+		background: #f8ecea;
+		color: var(--color-danger);
+	}
+	:global([data-theme='dark']) .status[data-state='saved'] {
+		color: #9fbfa6;
+	}
+	.retry {
+		border: 0;
+		background: none;
+		padding: 0;
+		color: inherit;
+		font: 600 13px var(--font-sans);
+		text-decoration: underline;
+	}
 	.desk {
 		background: var(--color-paper);
 	}

@@ -10,21 +10,17 @@
 
 	let { data }: PageProps = $props();
 
-	const SIZES = { S: '20px', M: '22px', L: '25px' } as const;
+	const SIZES = { S: '19px', M: '21px', L: '24px' } as const;
 	type Size = keyof typeof SIZES;
-	let size = $state<Size>('M');
-	let saved = $state(false);
+	let size = $derived<Size>(data.textSize as Size);
+	let saved = $derived(data.saved);
 	let progress = $state(0);
-	$effect.pre(() => {
-		size = data.textSize as Size;
-		saved = data.saved;
-	});
 
 	const toast = createToast();
 	const poem = $derived(data.poem);
 	const isQuote = $derived(poem.kind === 'quote');
 
-	// Each line staggers 90ms after the title, as in the design.
+	// Each line rises 90ms after the one before it.
 	const lines = $derived.by(() => {
 		let n = 0;
 		return stanzas(poem.body).map((st, i, all) => ({
@@ -45,11 +41,11 @@
 		return () => removeEventListener('scroll', onScroll);
 	});
 
-	async function cycleSize() {
-		const order: Size[] = ['S', 'M', 'L'];
-		size = order[(order.indexOf(size) + 1) % 3];
+	async function setSize(s: Size) {
+		if (s === size) return;
+		size = s;
 		// Remembered on the private profile (RLS: own row only).
-		if (data.session?.user) await data.supabase.from('profiles').update({ text_size: size }).eq('id', data.session.user.id);
+		if (data.session?.user) await data.supabase.from('profiles').update({ text_size: s }).eq('id', data.session.user.id);
 	}
 
 	async function toggleBm() {
@@ -65,89 +61,120 @@
 			await setBookmark(data.supabase, poem.id, !on);
 		});
 	}
+
+	// Shares only the poem's link — nothing about the reader.
+	async function share() {
+		const url = location.href.split('#')[0];
+		try {
+			if (navigator.share) return await navigator.share({ title: poem.title, text: `“${poem.title}” — ${poem.author}`, url });
+			await navigator.clipboard.writeText(url);
+			toast.show('Link copied.');
+		} catch (e) {
+			if ((e as Error)?.name !== 'AbortError') toast.show('Couldn’t share the link just now.');
+		}
+	}
 </script>
 
 <svelte:head><title>{poem.title} — Between the Lines</title></svelte:head>
 
 <div class="page-in min-h-screen bg-sheet">
-	<!-- Minimal reading bar + progress -->
-	<header class="sticky top-0 z-5 border-b border-line-soft bg-[rgb(253_251_247/0.94)] backdrop-blur">
-		<div class="mx-auto flex max-w-[1240px] items-center justify-between gap-3 px-4 py-2 sm:px-6">
-			<a class="ctl" href="/library"><Icon name="back" size={18} />Library</a>
-			<a href="/discover" class="hidden font-serif text-[15px] text-subtle italic sm:inline">Between the Lines</a>
-			<div class="flex gap-1">
-				<button class="ctl" aria-label="Change text size, currently {size}" onclick={cycleSize}><span class="font-serif text-lg">A</span><span class="text-xs">{size}</span></button>
-				<BookmarkButton saved={saved} title={poem.title} onclick={toggleBm} withText />
+	<!-- Reading bar + progress -->
+	<header class="bar sticky top-0 z-5 border-b border-line-soft">
+		<div class="mx-auto flex max-w-[1240px] items-center justify-between gap-2 px-3 py-2 sm:px-6">
+			<a class="btn btn-quiet btn-sm" href="/library"><Icon name="back" size={17} />Library</a>
+			<div class="flex items-center gap-1">
+				<div role="radiogroup" aria-label="Text size" class="sizes">
+					{#each Object.keys(SIZES) as s (s)}
+						<button role="radio" aria-checked={size === s} aria-label={{ S: 'Small', M: 'Medium', L: 'Large' }[s]} onclick={() => setSize(s as Size)}>
+							<span style="font-size: {{ S: 13, M: 16, L: 19 }[s]}px">A</span>
+						</button>
+					{/each}
+				</div>
+				<button class="icon-btn" aria-label="Share this poem" title="Share" onclick={share}><Icon name="share" size={18} /></button>
+				<BookmarkButton {saved} title={poem.title} onclick={toggleBm} withText />
 			</div>
 		</div>
 		<div role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress} class="h-0.5 bg-sand">
-			<div class="h-0.5 bg-rose transition-[width] duration-200 ease-linear" style="width: {progress}%"></div>
+			<div class="h-0.5 bg-dusty transition-[width] duration-200 ease-linear" style="width: {progress}%"></div>
 		</div>
 	</header>
 
 	<!-- The poem -->
-	<article class="mx-auto flex max-w-[680px] flex-col gap-12 px-6 pt-16 pb-20 sm:px-7 sm:pt-[104px]">
-		<header class="reveal-title flex flex-col items-start gap-5">
+	<article class="mx-auto flex max-w-[640px] flex-col gap-11 px-6 pt-14 pb-16 sm:px-8 sm:pt-24">
+		<header class="reveal-title flex flex-col items-start gap-4">
 			<a href="/library?category={poem.category.slug}" class="eyebrow text-rose">{poem.category.name}{isQuote ? ' · Quote' : ''}</a>
-			<h1 style="view-transition-name: poem-title" class="m-0 font-serif text-[42px] leading-[1.05] font-light tracking-[-0.025em] text-balance text-ink sm:text-[56px]">{poem.title}</h1>
-			<p class="m-0 text-[15px] text-muted">{poem.author} <span class="text-faint">·</span> {poem.reading_minutes} min read</p>
+			<h1 style="view-transition-name: poem-title" class="m-0 font-serif text-[40px] leading-[1.06] font-light tracking-[-0.025em] text-balance text-ink sm:text-[54px]">{poem.title}</h1>
+			<p class="m-0 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+				<span class="font-serif text-xl text-ink-3 italic">by {poem.author}</span>
+				<span class="text-[13px] text-subtle">{poem.reading_minutes} min read</span>
+			</p>
 		</header>
 
-		<div class="flex flex-col gap-9 font-serif leading-[1.75] text-[#2E2622]" style="font-size: {SIZES[size]}">
-			{#each lines as st, i (i)}
-				<p class="m-0" class:italic={st.last}>
-					{#each st.lines as ln, j (j)}<span class="line-in" style="animation-delay: {ln.delay}ms">{ln.text}</span>{/each}
-				</p>
-			{/each}
-		</div>
+		{#if isQuote}
+			<blockquote class="quote m-0" style="font-size: calc({SIZES[size]} + 6px)">
+				<span class="line-in" style="animation-delay: 300ms">{poem.body}</span>
+			</blockquote>
+		{:else}
+			<div class="poem flex flex-col gap-8" style="font-size: {SIZES[size]}">
+				{#each lines as st, i (i)}
+					<p class="m-0" class:italic={st.last}>
+						{#each st.lines as ln, j (j)}<span class="line-in" style="animation-delay: {ln.delay}ms">{ln.text}</span>{/each}
+					</p>
+				{/each}
+			</div>
+		{/if}
 
-		<div class="after flex justify-center pt-2 font-serif text-lg text-rose-soft" aria-hidden="true" style="animation-delay: {afterDelay}ms">· · ·</div>
+		<div class="after flex justify-center pt-2 font-serif text-lg text-dusty" aria-hidden="true" style="animation-delay: {afterDelay}ms">· · ·</div>
 	</article>
 
-	<!-- Reflection continuation -->
-	<section class="after mx-auto max-w-[680px] px-6 pb-24 sm:px-7" style="animation-delay: {afterDelay}ms">
-		<div class="flex flex-col gap-5.5 border border-line-soft bg-sand-2 p-7 sm:p-12">
+	<!-- Reflection -->
+	<section class="after mx-auto max-w-[640px] px-5 pb-24 sm:px-8" style="animation-delay: {afterDelay}ms" aria-labelledby="reflect-h">
+		<div class="reflect">
 			<span class="eyebrow text-subtle">Sit with it a moment</span>
-			<p class="m-0 font-serif text-[28px] leading-[1.3] font-light text-ink sm:text-[32px]">What did these words awaken in you?</p>
+			<h2 id="reflect-h" class="m-0 font-serif text-[27px] leading-[1.3] font-light text-ink sm:text-[31px]">What did these words awaken in you?</h2>
 			{#if poem.reflection_prompts.length}
-				<ul class="m-0 flex list-none flex-col gap-2.5 p-0 font-serif text-lg leading-normal text-body italic">
+				<ul class="m-0 flex list-none flex-col gap-2 p-0 font-serif text-[17px] leading-normal text-body italic">
 					{#each poem.reflection_prompts as p (p)}<li>— {p}</li>{/each}
 				</ul>
 			{/if}
-			<div class="flex flex-wrap items-center gap-5 pt-1.5">
-				<a class="btn btn-primary btn-lg" href="/write?poem={poem.slug}">Write what it means to you <span class="arr"><Icon name="arrow" size={18} /></span></a>
-				<span class="inline-flex items-center gap-2 text-[13px] text-muted"><Icon name="lock" size={15} />Saved to your private journal</span>
+			<div class="flex flex-col gap-3 pt-2">
+				<a class="btn btn-primary btn-lg self-start" href="/write?poem={poem.slug}">Write what it means to you <span class="arr"><Icon name="arrow" size={18} /></span></a>
+				<p class="m-0 flex items-center gap-2 text-[13px] text-muted"><Icon name="lock" size={14} />Goes to your private journal. Nothing is shared unless you write a separate post.</p>
 			</div>
+			<a class="share-anon" href="/community/new?poem={poem.slug}">
+				<Icon name="community" size={16} />
+				<span>Want to share with the community instead? <strong>Write an anonymous post</strong></span>
+			</a>
 		</div>
 	</section>
 
 	<!-- Anonymous reflections from the community -->
-	<section class="border-t border-line-soft bg-paper">
-		<div class="mx-auto flex max-w-[880px] flex-col gap-7 px-6 pt-20 pb-28 sm:px-7">
+	<section class="border-t border-line-soft bg-paper" aria-labelledby="others-h">
+		<div class="mx-auto flex max-w-[880px] flex-col gap-7 px-5 pt-16 pb-28 sm:px-8 sm:pt-20">
 			<div class="flex flex-wrap items-baseline justify-between gap-3">
-				<h2 class="m-0 font-serif text-[28px] font-normal text-ink">
+				<h2 id="others-h" class="section-title">
 					{data.reflectionCount
 						? `${data.reflectionCount} ${data.reflectionCount === 1 ? 'reader' : 'readers'} reflected on this`
 						: 'No one has shared about this yet'}
 				</h2>
-				<a href="/community" class="text-sm font-medium">{data.reflectionCount ? 'Read all reflections →' : 'Visit the community →'}</a>
+				<a href="/community" class="section-link">{data.reflectionCount ? 'Read all reflections →' : 'Visit the community →'}</a>
 			</div>
 			{#if data.reflections.length}
-				<div class="grid grid-cols-[repeat(auto-fit,minmax(min(360px,100%),1fr))] gap-5">
+				<div class="grid grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] gap-4">
 					{#each data.reflections as r (r.id)}
-						<article class="card flex flex-col gap-4 border border-line bg-card p-7">
-							<p class="m-0 line-clamp-6 font-serif text-lg leading-[1.6] whitespace-pre-line text-ink-3">{r.body}</p>
-							<div class="flex justify-between border-t border-line-soft pt-3.5 text-[13px] text-muted"><span>Anonymous</span><span>{r.likes_count} felt this</span></div>
+						<article class="surface flex flex-col gap-4 p-6">
+							<p class="m-0 line-clamp-6 font-serif text-[17px] leading-[1.6] whitespace-pre-line text-ink-3">{r.body}</p>
+							<div class="flex justify-between border-t border-line-soft pt-3 text-[13px] text-subtle"><span>Anonymous</span><span>{r.likes_count} felt this</span></div>
 						</article>
 					{/each}
 				</div>
 			{/if}
-			<nav aria-label="More in {poem.category.name}" class="flex flex-wrap justify-between gap-4 border-t border-line pt-6">
+			<nav aria-label="More in {poem.category.name}" class="grid grid-cols-1 gap-3 border-t border-line pt-6 sm:grid-cols-2">
 				{#if data.prev}
-					<a href="/read/{data.prev.slug}" class="flex flex-col gap-1"><span class="text-xs text-subtle">Previous in {poem.category.name}</span><span class="font-serif text-xl text-ink">{data.prev.title}</span></a>
-				{:else}<span></span>{/if}
+					<a href="/read/{data.prev.slug}" class="surface pn"><span class="text-xs text-subtle">← Previous in {poem.category.name}</span><span class="font-serif text-xl text-ink">{data.prev.title}</span></a>
+				{:else}<span class="hidden sm:block"></span>{/if}
 				{#if data.next}
-					<a href="/read/{data.next.slug}" class="flex flex-col gap-1 text-right"><span class="text-xs text-subtle">Next in {poem.category.name}</span><span class="font-serif text-xl text-ink">{data.next.title}</span></a>
+					<a href="/read/{data.next.slug}" class="surface pn sm:text-right"><span class="text-xs text-subtle">Next in {poem.category.name} →</span><span class="font-serif text-xl text-ink">{data.next.title}</span></a>
 				{/if}
 			</nav>
 		</div>
@@ -157,25 +184,51 @@
 <Toast open={toast.open} text={toast.text} onundo={toast.undo} />
 
 <style>
-	.ctl {
-		min-width: 44px;
-		height: 44px;
-		padding: 0 12px;
+	.bar {
+		background: rgb(253 251 247 / 0.94);
+		backdrop-filter: blur(8px);
+	}
+	:global([data-theme='dark']) .bar {
+		background: rgb(35 30 27 / 0.94);
+	}
+	.sizes {
+		display: inline-flex;
+		align-items: center;
+		margin-right: 4px;
+		padding: 2px;
+		border: 1px solid var(--color-line);
+		border-radius: 999px;
+	}
+	.sizes button {
+		width: 34px;
+		height: 34px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 8px;
-		border: 1px solid transparent;
-		border-radius: 2px;
+		border: 0;
+		border-radius: 999px;
 		background: transparent;
-		color: var(--color-body);
-		font: 500 13px var(--font-sans);
+		color: var(--color-muted);
+		font-family: var(--font-serif);
 		transition:
-			border-color var(--t2) var(--ease-out),
+			background-color var(--t2) var(--ease-out),
 			color var(--t2) var(--ease-out);
 	}
-	.ctl:hover {
-		border-color: var(--color-line-strong);
+	.sizes button[aria-checked='true'] {
+		background: var(--color-beige);
+		color: var(--color-ink);
+	}
+	/* Comfortable measure: ~34em, generous leading, stanza gaps. */
+	.poem {
+		font-family: var(--font-serif);
+		line-height: 1.75;
+		color: var(--color-ink-2);
+		transition: font-size var(--t3) var(--ease-out);
+	}
+	.quote {
+		padding-left: 22px;
+		border-left: 2px solid var(--color-dusty);
+		font: italic 300 26px/1.5 var(--font-serif);
 		color: var(--color-ink);
 	}
 	.reveal-title {
@@ -183,6 +236,44 @@
 	}
 	.after {
 		animation: pageIn var(--t4) var(--ease-out) both;
+	}
+	.reflect {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+		padding: 28px 24px;
+		background: var(--color-sand-2);
+		border: 1px solid var(--color-line-soft);
+		border-radius: 2px;
+	}
+	@media (min-width: 640px) {
+		.reflect {
+			padding: 44px;
+		}
+	}
+	.share-anon {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		margin-top: 4px;
+		padding-top: 16px;
+		border-top: 1px solid var(--color-line);
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--color-muted);
+	}
+	.share-anon strong {
+		font-weight: 500;
+		color: var(--color-rose);
+	}
+	.share-anon:hover strong {
+		color: var(--color-rose-dark);
+	}
+	.pn {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 16px 18px;
 	}
 	.arr {
 		display: inline-flex;

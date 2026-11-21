@@ -40,7 +40,7 @@
 			transform var(--t3) var(--ease-out),
 			visibility 0s linear var(--t3);
 	}
-	@media (max-width: 1023px) {
+	@media (max-width: 767px) {
 		.toast {
 			bottom: 104px;
 		}

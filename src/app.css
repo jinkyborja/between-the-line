@@ -1,8 +1,12 @@
 @import 'tailwindcss';
 
 /*
- * Between the Lines — design tokens, taken from the Claude Design canvas.
- * Warm paper grounds, ink text, one rose accent. 2px radii, 1px warm borders.
+ * Between the Lines — design tokens.
+ * Palette: warm ivory #F7F2EA · soft beige #EAE0D3 · dusty rose #C9A89B ·
+ * muted brown #8C7568 · deep brown #3B2D27. Dusty rose and muted brown are
+ * too light for small text on ivory (WCAG), so they are used for lines,
+ * indicators and large decorative type; text uses the deeper shades below.
+ * Radii: 2px for controls and cards, 6px for floating layers, full for pills.
  */
 @theme {
 	--font-serif: 'Newsreader', Georgia, serif;
@@ -12,7 +16,8 @@
 	--color-paper: #f7f2ea; /* app background */
 	--color-sheet: #fdfbf7; /* cards, reading page */
 	--color-card: #fbf8f3;
-	--color-sand: #f1eadf; /* sidebar */
+	--color-sand: #efe7dc; /* sidebar */
+	--color-beige: #eae0d3; /* palette: soft beige */
 	--color-sand-2: #f7f0e6; /* soft panels */
 	--color-skel: #efe7db;
 
@@ -26,7 +31,8 @@
 	--color-ink: #231d1a;
 	--color-ink-2: #2b2522;
 	--color-ink-3: #3a302b;
-	--color-espresso: #3f322b; /* primary buttons */
+	--color-espresso: #3b2d27; /* palette: deep brown — primary buttons */
+	--color-mocha: #8c7568; /* palette: muted brown — icons, large text */
 	--color-body: #4a3f38;
 	--color-muted: #5e534c;
 	--color-subtle: #6f625a;
@@ -35,13 +41,19 @@
 	--color-cream-2: #f3ece2;
 
 	/* Accent */
-	--color-rose: #8e4a4f;
-	--color-rose-dark: #6e363b;
-	--color-rose-soft: #d9b3ae;
-	--color-rose-tint: #f1e1de;
+	--color-rose: #8a5548; /* deep dusty rose: text-safe accent (5.4:1 on ivory) */
+	--color-rose-dark: #6b3f35;
+	--color-rose-soft: #c9a89b; /* palette: dusty rose — lines, indicators */
+	--color-rose-tint: #f3e8e2;
+	--color-dusty: #c9a89b;
 	--color-danger: #8e3a40;
 
 	--radius-xs: 2px;
+	--radius-float: 6px;
+
+	--shadow-card: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 1px 2px rgb(59 45 39 / 0.04);
+	--shadow-raised: 0 22px 44px -30px rgb(59 45 39 / 0.42);
+	--shadow-float: 0 24px 60px -28px rgb(43 37 34 / 0.45);
 
 	--ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
 	--ease-io: cubic-bezier(0.65, 0, 0.35, 1);
@@ -78,6 +90,9 @@
 		--color-rose-dark: #e8c0bd;
 		--color-rose-soft: #8e4a4f;
 		--color-rose-tint: #3a2627;
+		--color-beige: #2b2420;
+		--color-mocha: #a89a8c;
+		--color-dusty: #7a5a50;
 		--color-danger: #e39a9f;
 	}
 	@media (prefers-color-scheme: dark) {
@@ -107,6 +122,9 @@
 			--color-rose-dark: #e8c0bd;
 			--color-rose-soft: #8e4a4f;
 			--color-rose-tint: #3a2627;
+		--color-beige: #2b2420;
+		--color-mocha: #a89a8c;
+		--color-dusty: #7a5a50;
 			--color-danger: #e39a9f;
 		}
 	}
@@ -502,5 +520,243 @@ dialog.modal[open]::backdrop {
 	.ink-draw path {
 		animation: none;
 		stroke-dashoffset: 0;
+	}
+}
+
+/* ===========================================================================
+ * Shared UI — one definition for patterns that pages used to restyle locally.
+ * =========================================================================== */
+@layer components {
+	/* Page header: eyebrow → title → lede, with an optional action on the right. */
+	.page-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 16px 24px;
+	}
+	.page-title {
+		margin: 0;
+		font-family: var(--font-serif);
+		font-weight: 300;
+		font-size: clamp(36px, 5vw, 52px);
+		line-height: 1.05;
+		letter-spacing: -0.025em;
+		color: var(--color-ink);
+	}
+	.page-lede {
+		margin: 0;
+		max-width: 560px;
+		font-size: 16px;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+	.section-title {
+		margin: 0;
+		font-family: var(--font-serif);
+		font-weight: 400;
+		font-size: clamp(22px, 2.4vw, 28px);
+		line-height: 1.2;
+		color: var(--color-ink);
+	}
+	.section-link {
+		flex: none;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	/* Cards */
+	.surface {
+		background: var(--color-sheet);
+		border: 1px solid var(--color-line);
+		border-radius: 2px;
+		box-shadow: var(--shadow-card);
+	}
+	a.surface,
+	.surface-link {
+		color: inherit;
+		transition:
+			border-color var(--t3) var(--ease-out),
+			box-shadow var(--t3) var(--ease-out),
+			transform var(--t3) var(--ease-out);
+	}
+	a.surface:hover,
+	.surface-link:hover {
+		color: inherit;
+		border-color: var(--color-line-hover);
+		box-shadow: var(--shadow-raised);
+		transform: translateY(-2px);
+	}
+
+	/* Privacy pill and status badges */
+	.privacy-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 30px;
+		padding: 0 12px;
+		border-radius: 999px;
+		background: var(--color-espresso);
+		color: var(--color-cream);
+		font-size: 12px;
+		font-weight: 500;
+		align-self: flex-start;
+	}
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 24px;
+		padding: 0 10px;
+		border-radius: 999px;
+		font-size: 11px;
+		font-weight: 500;
+		background: var(--color-skel);
+		color: var(--color-body);
+	}
+	.badge-dark {
+		background: var(--color-espresso);
+		color: var(--color-cream);
+	}
+	.badge-draft {
+		background: transparent;
+		border: 1px dashed var(--color-faint);
+	}
+	.badge-rose {
+		background: var(--color-rose-tint);
+		color: var(--color-rose-dark);
+	}
+
+	/* Underline tabs */
+	.tabs {
+		display: flex;
+		flex-wrap: wrap;
+		column-gap: 28px;
+		border-bottom: 1px solid var(--color-line);
+	}
+	.tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 44px;
+		margin-bottom: -1px;
+		padding: 0;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: none;
+		color: var(--color-muted);
+		font: 500 14px var(--font-sans);
+		transition:
+			color var(--t2) var(--ease-out),
+			border-color var(--t2) var(--ease-out);
+	}
+	.tab:hover {
+		color: var(--color-ink);
+	}
+	.tab[aria-selected='true'],
+	.tab[aria-current='page'] {
+		color: var(--color-ink);
+		border-bottom-color: var(--color-rose);
+	}
+
+	/* Icon-only button (always give it an aria-label) */
+	.icon-btn {
+		position: relative;
+		width: 44px;
+		height: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		border: 1px solid transparent;
+		border-radius: 2px;
+		background: transparent;
+		color: var(--color-body);
+		transition:
+			color var(--t2) var(--ease-out),
+			border-color var(--t2) var(--ease-out),
+			background-color var(--t2) var(--ease-out);
+	}
+	.icon-btn:hover {
+		border-color: var(--color-line-strong);
+		color: var(--color-ink);
+	}
+	.icon-btn:active {
+		background: var(--color-card);
+	}
+
+	/* Small and quiet button variants */
+	.btn-sm {
+		min-height: 36px;
+		padding: 0 14px;
+		font-size: 13px;
+	}
+	.btn-quiet {
+		background: transparent;
+		color: var(--color-body);
+	}
+	.btn-quiet:hover:not(:disabled) {
+		background: var(--color-card);
+		color: var(--color-ink);
+	}
+	.btn:active:not(:disabled) {
+		transform: translateY(1px);
+	}
+
+	/* Native select styled like a field */
+	.field-select {
+		width: auto;
+		padding-right: 34px;
+		appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2714%27 height=%2714%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236F625A%27 stroke-width=%271.6%27 stroke-linecap=%27round%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 12px center;
+	}
+
+	/* Popover menu (dropdowns) */
+	.menu {
+		position: absolute;
+		z-index: 30;
+		min-width: 200px;
+		padding: 6px;
+		background: var(--color-sheet);
+		border: 1px solid var(--color-line);
+		border-radius: var(--radius-float);
+		box-shadow: var(--shadow-float);
+		animation: menuIn var(--t2) var(--ease-out);
+		transform-origin: top right;
+	}
+	.menu-item {
+		width: 100%;
+		min-height: 40px;
+		padding: 0 12px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		border: 0;
+		border-radius: 2px;
+		background: none;
+		color: var(--color-ink-2);
+		font: 400 14px var(--font-sans);
+		text-align: left;
+	}
+	.menu-item:hover {
+		background: var(--color-paper);
+		color: var(--color-ink);
+	}
+}
+
+@keyframes menuIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.98);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	a.surface:hover,
+	.surface-link:hover,
+	.btn:active:not(:disabled) {
+		transform: none;
 	}
 }

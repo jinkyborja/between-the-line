@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
+	import type { IconName } from '#lib/icons.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import PasswordMeter from '#lib/components/PasswordMeter.svelte';
 	import type { SubmitFunction } from '$app/forms';
 	import type { PageProps } from './$types';
@@ -45,6 +48,7 @@
 		['password', 'Password'],
 		['notifications', 'Notifications'],
 		['appearance', 'Appearance'],
+		['privacy', 'Privacy'],
 		['data', 'Your data']
 	];
 	const sizes = { S: '17px', M: '19px', L: '22px' } as const;
@@ -53,16 +57,16 @@
 <svelte:head><title>Settings — Between the Lines</title></svelte:head>
 
 <div class="flex flex-col gap-10">
-	<h1 class="m-0 font-serif text-[42px] font-light tracking-[-0.025em] text-ink sm:text-[52px]">Settings</h1>
+	<PageHeader title="Settings" lede="Your account, your space, and how Between the Lines feels to use." />
 
-	<div class="flex flex-wrap items-start gap-12">
-		<nav aria-label="Settings sections" class="flex flex-[0_1_200px] flex-col gap-0.5 lg:sticky lg:top-8">
+	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-12">
+		<nav aria-label="Settings sections" class="snavs">
 			{#each sections as [id, label] (id)}<a href="#{id}" class="snav">{label}</a>{/each}
 		</nav>
 
-		<div class="flex min-w-0 flex-[999_1_520px] flex-col gap-14">
+		<div class="flex min-w-0 flex-col gap-6">
 			<!-- Account -->
-			<section id="account" class="flex scroll-mt-8 flex-col gap-6">
+			<section id="account" class="card scroll-mt-24 flex flex-col gap-6">
 				<div class="flex flex-col gap-1.5"><h2 class="sh">Account</h2><p class="sd">Your name is only ever shown to you. The community never sees it.</p></div>
 				<form method="POST" action="?/account" class="flex flex-col gap-5" use:enhance={submit('account')}>
 					<label class="auth-label">Display name<input class="field" name="display_name" maxlength="60" required value={p?.display_name ?? ''} /></label>
@@ -78,7 +82,7 @@
 			</section>
 
 			<!-- Password -->
-			<section id="password" class="flex scroll-mt-8 flex-col gap-6 border-t border-line pt-12">
+			<section id="password" class="card scroll-mt-24 flex flex-col gap-6">
 				<div class="flex flex-col gap-1.5"><h2 class="sh">Password</h2>
 					<p class="sd">{data.hasPassword ? 'Choose something long and memorable.' : 'You sign in with Google, so there’s no password to change here.'}</p></div>
 				{#if data.hasPassword}
@@ -94,7 +98,7 @@
 			</section>
 
 			<!-- Notifications -->
-			<section id="notifications" class="flex scroll-mt-8 flex-col gap-6 border-t border-line pt-12">
+			<section id="notifications" class="card scroll-mt-24 flex flex-col gap-6">
 				<div class="flex flex-col gap-1.5"><h2 class="sh">Notifications</h2><p class="sd">Gentle, in-app only. We never email you about the community.</p></div>
 				<form method="POST" action="?/notifications" class="flex flex-col gap-3" use:enhance={submit('notifications')}>
 					{#each [['notify_comments', 'Replies to my anonymous posts', 'When someone answers something you shared.', p?.notify_comments ?? true], ['notify_appreciation', '“Felt this” on my posts', 'At most one note per post until you read it.', p?.notify_appreciation ?? true]] as [name, label, desc, checked] (name)}
@@ -109,7 +113,7 @@
 			</section>
 
 			<!-- Appearance -->
-			<section id="appearance" class="flex scroll-mt-8 flex-col gap-6 border-t border-line pt-12">
+			<section id="appearance" class="card scroll-mt-24 flex flex-col gap-6">
 				<div class="flex flex-col gap-1.5"><h2 class="sh">Appearance</h2><p class="sd">Make reading and writing comfortable for your eyes.</p></div>
 				<form method="POST" action="?/appearance" class="flex flex-col gap-6" use:enhance={submit('appearance')}>
 					<fieldset class="m-0 flex flex-col gap-3 border-0 p-0">
@@ -136,8 +140,21 @@
 				</form>
 			</section>
 
+			<!-- Privacy (how it works; enforced in the database, not by settings) -->
+			<section id="privacy" class="card scroll-mt-24 flex flex-col gap-5">
+				<div class="flex flex-col gap-1.5"><h2 class="sh">Privacy</h2><p class="sd">These protections are always on. They’re built into the database, so no setting can switch them off.</p></div>
+				<ul class="m-0 flex list-none flex-col p-0">
+					{#each [['lock', 'Journal and letters', 'Only you. Not other readers, not moderators.'], ['community', 'Community posts and replies', 'Always shown as Anonymous. Your name and email are never attached.'], ['shield', 'Moderation', 'Moderators can act on reported posts without learning who wrote them.'], ['account', 'Your account page', 'Visible to you alone — there are no public profiles.']] as [icon, title, text] (title)}
+						<li class="flex items-start gap-3.5 border-t border-line-soft py-3.5 first:border-t-0 first:pt-0">
+							<span class="pico"><Icon name={icon as IconName} size={16} /></span>
+							<span class="flex flex-col gap-0.5"><span class="text-sm font-semibold text-ink">{title}</span><span class="text-[13px] leading-relaxed text-muted">{text}</span></span>
+						</li>
+					{/each}
+				</ul>
+			</section>
+
 			<!-- Your data -->
-			<section id="data" class="flex scroll-mt-8 flex-col gap-6 border-t border-line pt-12">
+			<section id="data" class="card scroll-mt-24 flex flex-col gap-6">
 				<div class="flex flex-col gap-1.5"><h2 class="sh">Your data</h2><p class="sd">Everything you write belongs to you.</p></div>
 				<a class="btn btn-ghost self-start" href="/settings/export" download>Download my journal (Markdown)</a>
 
@@ -178,6 +195,47 @@
 </dialog>
 
 <style>
+	.card {
+		padding: 24px 20px;
+		background: var(--color-sheet);
+		border: 1px solid var(--color-line);
+		border-radius: 2px;
+	}
+	@media (min-width: 640px) {
+		.card {
+			padding: 32px;
+		}
+	}
+	.snavs {
+		display: flex;
+		gap: 6px;
+		overflow-x: auto;
+		margin: 0 -20px;
+		padding: 0 20px 2px;
+		scrollbar-width: none;
+	}
+	@media (min-width: 1024px) {
+		.snavs {
+			position: sticky;
+			top: 32px;
+			flex-direction: column;
+			gap: 2px;
+			margin: 0;
+			padding: 0;
+			overflow: visible;
+		}
+	}
+	.pico {
+		width: 32px;
+		height: 32px;
+		flex: none;
+		border-radius: 50%;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-beige);
+		color: var(--color-espresso);
+	}
 	.sh {
 		margin: 0;
 		font-family: var(--font-serif);
@@ -191,7 +249,9 @@
 		color: var(--color-muted);
 	}
 	.snav {
+		flex: none;
 		display: flex;
+		white-space: nowrap;
 		align-items: center;
 		min-height: 40px;
 		padding: 0 12px;
